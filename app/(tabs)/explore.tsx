@@ -1,109 +1,285 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { Send, Phone, Video, MoveVertical as MoreVertical } from 'lucide-react-native';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+type Message = {
+  id: string;
+  text: string;
+  sender: 'user' | 'other';
+  timestamp: Date;
+};
 
-export default function TabTwoScreen() {
+const initialMessages: Message[] = [
+  {
+    id: '1',
+    text: "Hi there! I noticed you haven't checked in today. Is everything okay?",
+    sender: 'other',
+    timestamp: new Date(Date.now() - 3600000),
+  },
+  {
+    id: '2',
+    text: "Yes, I'm running a bit late due to traffic. Should be there in 15 minutes.",
+    sender: 'user',
+    timestamp: new Date(Date.now() - 3000000),
+  },
+  {
+    id: '3',
+    text: "No problem, thanks for letting me know. Drive safely!",
+    sender: 'other',
+    timestamp: new Date(Date.now() - 2400000),
+  },
+];
+
+export default function MessagesScreen() {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [newMessage, setNewMessage] = useState('');
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const sendMessage = () => {
+    if (newMessage.trim() === '') return;
+
+    const message: Message = {
+      id: Date.now().toString(),
+      text: newMessage,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+
+    setMessages([...messages, message]);
+    setNewMessage('');
+
+    // Simulate received message
+    setTimeout(() => {
+      const response: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Thanks for the update! I've noted your arrival time.",
+        sender: 'other',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, response]);
+    }, 1000);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.container}
+    >
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Image
+            source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80' }}
+            style={styles.avatar}
+          />
+          <View style={styles.headerInfo}>
+            <Text style={styles.headerName}>HR Manager</Text>
+            <Text style={styles.headerStatus}>Online</Text>
+          </View>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.headerButton}>
+            <Phone size={20} color="#4F46E5" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton}>
+            <Video size={20} color="#4F46E5" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton}>
+            <MoreVertical size={20} color="#4F46E5" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.messagesContainer}
+        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+      >
+        {messages.map((message) => (
+          <View
+            key={message.id}
+            style={[
+              styles.messageWrapper,
+              message.sender === 'user' ? styles.userMessageWrapper : styles.otherMessageWrapper,
+            ]}
+          >
+            <View
+              style={[
+                styles.message,
+                message.sender === 'user' ? styles.userMessage : styles.otherMessage,
+              ]}
+            >
+              <Text style={[
+                styles.messageText,
+                message.sender === 'user' ? styles.userMessageText : styles.otherMessageText,
+              ]}>
+                {message.text}
+              </Text>
+              <Text style={[
+                styles.timestamp,
+                message.sender === 'user' ? styles.userTimestamp : styles.otherTimestamp,
+              ]}>
+                {formatTime(message.timestamp)}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          value={newMessage}
+          onChangeText={setNewMessage}
+          placeholder="Type your message..."
+          placeholderTextColor="#9CA3AF"
+          multiline
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+        <TouchableOpacity
+          style={styles.sendButton}
+          onPress={sendMessage}
+        >
+          <Send size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
   },
-  titleContainer: {
+  header: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'ios' ? 60 : 20,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerInfo: {
+    marginLeft: 12,
+  },
+  headerName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  headerStatus: {
+    fontSize: 14,
+    color: '#10B981',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  messagesContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  messageWrapper: {
+    marginBottom: 12,
+    flexDirection: 'row',
+  },
+  userMessageWrapper: {
+    justifyContent: 'flex-end',
+  },
+  otherMessageWrapper: {
+    justifyContent: 'flex-start',
+  },
+  message: {
+    maxWidth: '80%',
+    padding: 12,
+    borderRadius: 20,
+  },
+  userMessage: {
+    backgroundColor: '#4F46E5',
+    borderBottomRightRadius: 4,
+  },
+  otherMessage: {
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 4,
+  },
+  messageText: {
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  userMessageText: {
+    color: '#FFFFFF',
+  },
+  otherMessageText: {
+    color: '#111827',
+  },
+  timestamp: {
+    fontSize: 12,
+  },
+  userTimestamp: {
+    color: '#E5E7EB',
+    textAlign: 'right',
+  },
+  otherTimestamp: {
+    color: '#9CA3AF',
+  },
+  inputContainer: {
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginRight: 12,
+    fontSize: 16,
+    maxHeight: 100,
+    color: '#111827',
+  },
+  sendButton: {
+    backgroundColor: '#4F46E5',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
