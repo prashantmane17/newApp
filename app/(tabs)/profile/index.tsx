@@ -10,8 +10,10 @@ import {
     Platform,
 } from 'react-native';
 import { Calendar, Building2, User, Mail, Phone, Chrome as Home, MapPin, Building, CreditCard, Percent, Lock } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
+    const router = useRouter();
     const [profileData, setProfileData] = useState({
         name: 'It Mange J',
         department: 'IT Management',
@@ -76,7 +78,7 @@ export default function ProfileScreen() {
             <View style={styles.header}>
                 <View style={styles.headerContent}>
                     <Text style={styles.title}>Profile</Text>
-                    <TouchableOpacity style={styles.privacyButton}>
+                    <TouchableOpacity style={styles.privacyButton} onPress={() => router.push("/(tabs)/profile/password")}>
                         <Lock size={16} color="#4F46E5" />
                         <Text style={styles.privacyButtonText}>Privacy Settings</Text>
                     </TouchableOpacity>

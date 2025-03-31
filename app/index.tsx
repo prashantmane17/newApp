@@ -44,8 +44,8 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
     };
     const handleForgotPassword = () => {
-
-        setCurrentScreen('forgotPassword');
+        router.replace('/(tabs)');
+        // setCurrentScreen('forgotPassword');
     };
 
     const handleBackToLogin = () => {

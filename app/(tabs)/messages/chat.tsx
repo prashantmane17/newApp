@@ -17,9 +17,9 @@ export default function ChatScreen() {
     const { name, avatar } = useLocalSearchParams();
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([
-        { id: 1, text: 'Hey there!', sent: true },
-        { id: 2, text: 'Hi! How are you?', sent: false },
-        { id: 3, text: 'I\'m good, thanks!', sent: true },
+        { id: 1, text: 'Hi', sent: true },
+        { id: 2, text: 'Hello', sent: false },
+        { id: 3, text: 'Kuthe ahes', sent: true },
     ]);
 
     const sendMessage = () => {
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     },
     receivedMessage: {
         alignSelf: 'flex-start',
-        backgroundColor: '#E5E5EA',
+        backgroundColor: '#404040',
     },
     messageText: {
         color: '#fff',

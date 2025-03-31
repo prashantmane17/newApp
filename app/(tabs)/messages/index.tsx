@@ -5,23 +5,23 @@ import { useRouter } from 'expo-router';
 const contacts = [
     {
         id: '1',
-        name: 'John Doe',
-        avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36',
-        lastMessage: 'Hey, how are you?',
+        name: 'Snehal',
+        avatar: 'https://plus.unsplash.com/premium_photo-1682089810582-f7b200217b67?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW5kaWFuJTIwZ2lybHxlbnwwfHwwfHx8MA%3D%3D',
+        lastMessage: 'Where are you?',
         time: '5m ago'
     },
     {
         id: '2',
-        name: 'Jane Smith',
+        name: 'Pooja',
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330',
-        lastMessage: 'Let\'s meet tomorrow',
+        lastMessage: 'Kuthe ahes',
         time: '30m ago'
     },
     {
         id: '3',
-        name: 'Mike Johnson',
+        name: 'Ganesh',
         avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61',
-        lastMessage: 'Thanks for your help!',
+        lastMessage: 'Hii',
         time: '2h ago'
     }
 ];

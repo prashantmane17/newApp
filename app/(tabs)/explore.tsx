@@ -22,19 +22,19 @@ type Message = {
 const initialMessages: Message[] = [
   {
     id: '1',
-    text: "Hi there! I noticed you haven't checked in today. Is everything okay?",
+    text: "Hi there! ",
     sender: 'other',
     timestamp: new Date(Date.now() - 3600000),
   },
   {
     id: '2',
-    text: "Yes, I'm running a bit late due to traffic. Should be there in 15 minutes.",
+    text: "Hello, it's been long time ",
     sender: 'user',
     timestamp: new Date(Date.now() - 3000000),
   },
   {
     id: '3',
-    text: "No problem, thanks for letting me know. Drive safely!",
+    text: "Yeah, How are you?",
     sender: 'other',
     timestamp: new Date(Date.now() - 2400000),
   },
@@ -70,7 +70,7 @@ export default function MessagesScreen() {
     setTimeout(() => {
       const response: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Thanks for the update! I've noted your arrival time.",
+        text: "Hi There!",
         sender: 'other',
         timestamp: new Date(),
       };
@@ -90,20 +90,15 @@ export default function MessagesScreen() {
             style={styles.avatar}
           />
           <View style={styles.headerInfo}>
-            <Text style={styles.headerName}>HR Manager</Text>
-            <Text style={styles.headerStatus}>Online</Text>
+            <Text style={styles.headerName}>Sai Kumar</Text>
+            {/* <Text style={styles.headerStatus}>Online</Text> */}
           </View>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.headerButton}>
             <Phone size={20} color="#4F46E5" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
-            <Video size={20} color="#4F46E5" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
-            <MoreVertical size={20} color="#4F46E5" />
-          </TouchableOpacity>
+
         </View>
       </View>
 
