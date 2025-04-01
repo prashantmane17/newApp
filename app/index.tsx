@@ -18,7 +18,7 @@ import Svg, { Path, G, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Eye, EyeOff } from 'lucide-react-native';
 
 export default function LoginScreen() {
-    const [currentScreen, setCurrentScreen] = useState('login'); // 'login' or 'forgotPassword' or 'verificationCode'
+    const [currentScreen, setCurrentScreen] = useState('login');
     const [email, setEmail] = useState('');
     const router = useRouter();
     const [password, setPassword] = useState('');
@@ -40,8 +40,36 @@ export default function LoginScreen() {
     const toggleConfirmPasswordVisibility = () => {
         setShowConfirmPassword(!showConfirmPassword);
     };
-    const handleLogin = () => {
-        router.replace('/(tabs)');
+    const handleLogin = async () => {
+        console.log("joio")
+        const response = await fetch("http://192.168.1.26:8080/employee-login-mobile?workinguserName=" + email, {
+            method: "POST", // or "GET" based on API requirement
+            headers: { "Content-Type": "application/json" },
+        });
+        const formData = new URLSearchParams();
+        formData.append("username", email);
+        formData.append("password", password);
+
+        const passwordRes = await fetch("http://192.168.1.26:8080/login-user", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString(),
+        });
+
+        const data = await passwordRes.json();
+        console.log("huii", data)
+        if (response.ok) {
+            if (data.validated) {
+                Alert.alert("Sucsess", "Loged in suceessfully!!")
+                router.replace('/(tabs)');
+            } else {
+                Alert.alert("error", "Wrong password!!")
+            }
+        }
+        else {
+            Alert.alert("error", "Wrong email!!")
+        }
+
     };
     const handleForgotPassword = () => {
         router.replace('/(tabs)');
@@ -116,7 +144,10 @@ export default function LoginScreen() {
             <Text style={styles.welcomeText}>Welcome!</Text>
             <View style={styles.crmTextContainer}>
                 <Text style={styles.toText}>to </Text>
-                <Text style={styles.crmText}>Portstay</Text>
+                <Text className='text-gray-100'>Portstay</Text>
+            </View>
+            <View className="flex-1 items-center justify-center bg-blue-500">
+                <Text className="text-white text-lg font-bold">Hello, NativeWind!</Text>
             </View>
 
             <View style={styles.inputContainer}>
@@ -158,9 +189,9 @@ export default function LoginScreen() {
                 </View>
             </View>
 
-            <TouchableOpacity style={styles.loginButton}>
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
                 <Text style={styles.loginButtonText}
-                    onPress={handleLogin}>Login</Text>
+                >Login</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -369,6 +400,7 @@ const ColorfulSpiral = () => (
 const styles = StyleSheet.create({
     scrollContainer: {
         flexGrow: 1,
+        justifyContent: "center", padding: 20
     },
     container: {
         flex: 1,

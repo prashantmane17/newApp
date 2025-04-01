@@ -40,7 +40,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="messages"
         options={{
           title: 'Messages',
           tabBarIcon: ({ color }) => <MessageCircleCode size={20} color={color} />,
@@ -53,13 +53,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Users size={20} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="messages"
+      {/* <Tabs.Screen
+        name="payslip"
         options={{
           title: 'Payslip',
           tabBarIcon: ({ color }) => <Dock size={20} color={color} />,
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="profile"
         options={{
