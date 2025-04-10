@@ -6,15 +6,39 @@ export default function MessagesLayout() {
             <Stack.Screen
                 name="index"
                 options={{
-                    title: 'Messages',
-                    headerShown: true
+                    title: 'People',
+                    headerShown: false
                 }}
             />
             <Stack.Screen
                 name="chat"
                 options={{
                     title: 'Chat',
-                    headerShown: true,
+                    headerShown: false,
+                    headerBackTitle: 'Back'
+                }}
+            />
+            <Stack.Screen
+                name="teamChat"
+                options={{
+                    title: 'Chat',
+                    headerShown: false,
+                    headerBackTitle: 'Back'
+                }}
+            />
+            <Stack.Screen
+                name="companyChat"
+                options={{
+                    title: 'Chat',
+                    headerShown: false,
+                    headerBackTitle: 'Back'
+                }}
+            />
+            <Stack.Screen
+                name="workplaceChat"
+                options={{
+                    title: 'Chat',
+                    headerShown: false,
                     headerBackTitle: 'Back'
                 }}
             />

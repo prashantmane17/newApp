@@ -1,8 +1,5 @@
-
-
-
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { useEffect, useState, useMemo, useRef } from "react"
+import { useEffect, useState, useMemo } from "react"
 import {
     View,
     Text,
@@ -16,109 +13,48 @@ import {
     StatusBar,
     Image,
     Keyboard,
-    ScrollView
+    ScrollView,
 } from "react-native"
 import { Send, ArrowLeft, MoreVertical } from "lucide-react-native"
 import { useSession } from "@/context/ContextSession"
 import moment from "moment"
-import { connectSocket, sendMessage as sendSocketMessage, ChatMessage } from '@/hooks/sockets/socketService'; // adjust the path as per your project structure
-import { subscribeToNotifications } from '@/hooks/sockets/socketService'; // adjust the path as per your project structure
-
 
 export default function ChatScreen() {
-    const { id } = useLocalSearchParams()
+    const { companyId, empId, name } = useLocalSearchParams()
     const router = useRouter()
     const { sessionData } = useSession()
-    const [channelId, setChannelId] = useState("")
-    const [message, setMessage] = useState("")
-    const sectionListRef = useRef<SectionList<any>>(null);
+    const [messageUser, setMessageUser] = useState<any>([])
     const [messages, setMessages] = useState<any>([])
     const [userData, setUserData] = useState<any>(null)
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const friendsList = async () => {
         try {
-            const response = await fetch("http://192.168.1.26:8080/employee.chatUsers-mobile", {
+            const response = await fetch(`http://192.168.1.26:8080/mobile-post.employee.fetch-public-post?companyId=${companyId}&empId=${empId}&page=0`, {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
             })
-            const chatResponse = await fetch(`http://192.168.1.26:8080/api/private-chat/mobile-establishchannel/${sessionData?.loginId}/${id}`, {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            if (response.ok) {
+                if (response.status === 204) {
 
-            const chatdata = await chatResponse.json();
-            console.log("ress----", chatdata.chatChannelList[0].uuid)
-            setChannelId(chatdata.chatChannelList[0].uuid);
-            const data = await response.json()
-            const userMessage = data.friendList.find((user: any) => id === user.id)
-            setUserData(userMessage || { name: "User", avatar: null })
-            setMessages(userMessage?.message || [])
+                }
+                else {
+                    const data = await response.json()
+                    // const userMessage = data.posts?.map((user: any) => user.postedUserInfo)
+                    // console.log("daaa----", userMessage)
+                    // setMessageUser(userMessage || [])
+                    setUserData({ name: name || "User", avatar: null })
+                    setMessages(data.posts || []);
+                }
+            }
         } catch (error) {
             Alert.alert("Error", "Failed to fetch messages.")
         }
     }
 
     useEffect(() => {
-        if (!id || !sessionData?.loginId) return;
-        friendsList();
-        if (channelId) {
-
-            connectSocket(channelId, (newMessage: ChatMessage) => {
-                setMessages((prevMessages: any) => [
-                    ...prevMessages,
-                    {
-                        id: prevMessages.length + 1,
-                        contents: newMessage.contents,
-                        authorUser: { id: newMessage.fromUserId },
-                        timeSent: newMessage.dateAndTime,
-                    },
-                ]);
-                subscribeToNotifications(sessionData?.loginId, (notification: any) => {
-                    Alert.alert(`🔔 New Notification: ${notification.contents}`);
-                });
-                // console.log("newMessage----", newMessage)
-            });
-
-        }
-    }, [id, channelId]);
-
-    useEffect(() => {
-        const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
-            setKeyboardVisible(true);
-        });
-
-        const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
-            setKeyboardVisible(false);
-        });
-        return () => {
-            keyboardDidShowListener.remove();
-            keyboardDidHideListener.remove();
-        };
-    }, []);
-
-    const handleSendMessage = () => {
-        if (message.trim()) {
-            const newMessage: ChatMessage = {
-                dateAndTime: new Date().toISOString(),
-                chatId: "d",
-                fromUserId: sessionData?.loginId,
-                contents: message as string,
-                fromUserName: 'Hremp L',
-                fromUserProfilePic: null,
-                toUserId: id as string,
-                type: 'private'
-
-            };
-            sendSocketMessage(channelId, newMessage, sessionData?.loginId);
-
-            setMessage("");
-        }
-    };
-
+        friendsList()
+    }, [companyId])
 
     const formatMessageDate = (dateString: string) => {
         const date = moment(dateString)
@@ -134,27 +70,48 @@ export default function ChatScreen() {
 
     // Group messages by date for SectionList
     const messagesByDate = useMemo(() => {
-        if (messages.length === 0) return []
+        if (messages.length === 0) return [];
 
-        const groupedMessages: { [key: string]: any[] } = {}
+        const groupedMessages: { [key: string]: any[] } = {};
 
-        messages?.forEach((msg: any) => {
-            const dateKey = moment(msg.timeSent).format("YYYY-MM-DD")
+        messages.forEach((msg: any) => {
+            const dateKey = moment(msg?.day, "DD MMM YYYY [at] HH:mm").format("YYYY-MM-DD");
             if (!groupedMessages[dateKey]) {
-                groupedMessages[dateKey] = []
+                groupedMessages[dateKey] = [];
             }
-            groupedMessages[dateKey].push(msg)
-        })
+            groupedMessages[dateKey].push(msg);
+        });
 
         return Object.keys(groupedMessages)
             .map((date) => ({
                 title: formatMessageDate(date),
-                data: groupedMessages[date],
+                data: groupedMessages[date].sort((a, b) =>
+                    moment(a.day, "DD MMM YYYY").diff(moment(b.day, "DD MMM YYYY"))
+                ),
             }))
-            .sort((a, b) => {
-                return moment(b.data[0].timeSent).isBefore(moment(a.data[0].timeSent)) ? 1 : -1
-            })
-    }, [messages])
+            .sort((a, b) =>
+                moment(a.data[0].day, "DD MMM YYYY").diff(moment(b.data[0].day, "DD MMM YYYY"))
+            );
+    }, [messages]);
+
+    const cleanHtml = (html: any) => {
+        return html
+            .replace(/<p>\s*<br>\s*<\/p>/g, "")
+            .replace(/<\/p>\s*<p>/g, "/n")
+            .replace(/^\s+|\s+$/g, "")
+            .replace(/<br\s*\/?>/g, "/n")
+            .replace(/<p\s*\/?>/g, "").replace(/<\/p>/g, "")
+            .replace(/<(p|br|div|span|strong|em)>\s*<\/\1>/g, "")
+            .replace(/(\s*\n\s*)+/g, " ");
+    };
+    const HtmlRenderer = (cleanedHtml: string) => {
+        console.log("cleanedHtml------------", cleanedHtml)
+        const lines = cleanedHtml.split('/n')?.map((line: any, index: number) => (
+            <Text key={index}>{line}</Text>
+        ));
+
+        return <View>{lines}</View>;
+    };
 
     const EmptyChat = () => (
         <View style={styles.emptyContainer}>
@@ -200,20 +157,22 @@ export default function ChatScreen() {
                 ]}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
             >
+
                 {messages.length > 0 ? (
                     <SectionList
-                        ref={sectionListRef}
                         sections={messagesByDate}
-                        keyExtractor={(item) => item.id.toString()}
+                        keyExtractor={(item) => item._id.toString()}
                         renderItem={({ item }) => (
                             <View
                                 style={[
                                     styles.messageBubble,
-                                    sessionData?.loginId === item.authorUser?.id ? styles.sentMessage : styles.receivedMessage,
+                                    sessionData?.loginId === item.postedBy ? styles.sentMessage : styles.receivedMessage,
                                 ]}
                             >
-                                <Text style={styles.messageText}>{item.contents}</Text>
-                                <Text style={styles.timeText}>{formatTime(item.timeSent)}</Text>
+                                <Text style={styles.messagerName}>{item.postedUserInfo.fullName}</Text>
+                                {/* <RenderHTML contentWidth={width} source={{ html: cleanHtml(item.post.postDescription) }} /> */}
+                                <Text style={styles.messageText}>{HtmlRenderer(cleanHtml(item.postDescription || "--"))}</Text>
+                                <Text style={styles.timeText}>{item.date.split('at')[1]}</Text>
                             </View>
                         )}
                         renderSectionHeader={({ section: { title } }) => (
@@ -228,24 +187,8 @@ export default function ChatScreen() {
                 ) : (
                     <EmptyChat />
                 )}
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        value={message}
-                        onChangeText={setMessage}
-                        placeholder="Type a message..."
-                        multiline
-                        maxLength={500}
-                    />
-                    <TouchableOpacity
-                        style={styles.sendButton}
-                        onPress={handleSendMessage}
-                        activeOpacity={0.7}
-                        disabled={!message.trim()}
-                    >
-                        <Send color="#fff" size={20} />
-                    </TouchableOpacity>
-                </View>
+
+
             </KeyboardAvoidingView>
         </View>
     )
@@ -353,6 +296,10 @@ const styles = StyleSheet.create({
         alignSelf: "flex-start",
         backgroundColor: "#FFFFFF",
         borderBottomLeftRadius: 0,
+    },
+    messagerName: {
+        textTransform: 'capitalize',
+        color: 'red',
     },
     messageText: {
         fontSize: 16,

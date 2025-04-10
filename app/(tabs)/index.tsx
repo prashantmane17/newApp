@@ -1,472 +1,426 @@
-"use client"
 
-import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet } from "react-native"
-import { useState, useEffect } from "react"
-import { Clock, LogIn, LogOut, Calendar, User, DollarSign, MessageSquare } from "lucide-react-native"
-import { useRouter } from "expo-router"
+import React, { useState, useCallback } from 'react';
+import { View, Text, TextInput, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Alert, StatusBar } from 'react-native';
+import { Users, MessageSquare, Building2, MessagesSquare, Timer, LogIn, LogOut, Clock, Plus, EllipsisVertical, Outdent, Building } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import { useSession } from '@/context/ContextSession';
+import moment from "moment"
+import { ActivityIndicator } from 'react-native';
 
-// Sample recent attendance data
-const recentAttendance = [
-  {
-    id: "1",
-    date: "Today",
-    checkIn: "09:00 AM",
-    checkOut: "05:30 PM",
-    duration: "8h 30m",
-    status: "on-time",
-  },
-  {
-    id: "2",
-    date: "Yesterday",
-    checkIn: "09:15 AM",
-    checkOut: "06:00 PM",
-    duration: "8h 45m",
-    status: "late",
-  },
-  {
-    id: "3",
-    date: "Mon, Mar 18",
-    checkIn: "08:55 AM",
-    checkOut: "05:45 PM",
-    duration: "8h 50m",
-    status: "on-time",
-  },
-  {
-    id: "4",
-    date: "Fri, Mar 15",
-    checkIn: "09:05 AM",
-    checkOut: "05:30 PM",
-    duration: "8h 25m",
-    status: "on-time",
-  },
-]
 
-export default function AttendanceHomeScreen() {
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const router = useRouter()
-  const [isCheckedIn, setIsCheckedIn] = useState(false)
-  const [lastAction, setLastAction] = useState<string | null>(null)
-  const [checkInTime, setCheckInTime] = useState<Date | null>(null)
-  const [checkOutTime, setCheckOutTime] = useState<Date | null>(null)
-  const [elapsedTime, setElapsedTime] = useState(0)
+export default function ChatInterface() {
+  const router = useRouter();
+  const { sessionData } = useSession();
+  const [messages, setMessages] = useState<any>({ user: [], team: [], group: [], company: [] });
+  const [lastMessage, setLastMessage] = useState<any>({ user: [], team: [], group: [], company: [] });
+  const [companyTeam, setCompanyTeam] = useState<any>({})
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleLogout = () => {
-    console.log("logout clicked")
-    router.replace("/login")
-  }
+  const friendsList = async () => {
+    try {
+      setLoading(true); // Start loading
+      const response = await fetch('http://192.168.1.26:8080/employee.chatUsers-mobile', {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      // const postResponse = await fetch('http://192.168.1.26:8080/api-leads-add', {
+      //   method: "POST",
+      //   credentials: "include",
+      //   headers: { "Content-Type": "application/json" },
+      // });
+      // const postdata = await postResponse.json();
+      // console.log("postdata----", postdata)
+      const data = await response.json();
+      setCompanyTeam(data.team || data.helpdesk || data.HumanResources || data.support);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-      if (isCheckedIn && checkInTime) {
-        setElapsedTime(Math.floor((new Date().getTime() - checkInTime.getTime()) / 1000))
-      }
-    }, 1000)
+      const extractLastMessage = (list: any) => list?.map((msg: any) => msg.message?.slice(-1)[0] || '--');
+      setLastMessage({
+        user: extractLastMessage(data.friendList),
+        team: extractLastMessage(data.teamList),
+        company: extractLastMessage(data.workingCompany)
+      });
 
-    return () => clearInterval(timer)
-  }, [isCheckedIn, checkInTime])
-
-  const handleCheckIn = () => {
-    const now = new Date()
-    const timeString = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })
-    setCheckInTime(now)
-    setCheckOutTime(null)
-    setElapsedTime(0)
-    setIsCheckedIn(true)
-    setLastAction(`Checked in at ${timeString}`)
-  }
-
-  const handleCheckOut = () => {
-    const now = new Date()
-    const timeString = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })
-    setCheckOutTime(now)
-    setElapsedTime(Math.floor((now.getTime() - (checkInTime?.getTime() || 0)) / 1000))
-    setIsCheckedIn(false)
-    setLastAction(`Checked out at ${timeString}`)
-  }
-
-  const formatTime = (time: number) => {
-    const hours = Math.floor(time / 3600)
-    const minutes = Math.floor((time % 3600) / 60)
-    const seconds = time % 60
-    return `${String(hours).padStart(2, "0")}h : ${String(minutes).padStart(2, "0")}m : ${String(seconds).padStart(2, "0")}s`
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "on-time":
-        return "#059669"
-      case "late":
-        return "#DC2626"
-      default:
-        return "#6B7280"
+      setMessages({
+        user: data.friendList,
+        team: data.teamList,
+        group: data.portList,
+        company: data.workingCompany
+      });
+    } catch (error) {
+      Alert.alert("error", "err." + error);
+    } finally {
+      setLoading(false); // Stop loading
     }
-  }
+  };
 
-  const navigateToScreen = (screen: string) => {
-    console.log(`Navigating to ${screen}`)
-    // In a real app, you would navigate to the appropriate screen
-    // router.push(`/${screen}`);
+  useFocusEffect(
+    useCallback(() => {
+      friendsList();
+    }, [sessionData]));
+
+
+  const formatMessageDate = (dateString: string) => {
+    const date = moment(dateString)
+    const today = moment().startOf("day")
+    const yesterday = moment().subtract(1, "day").startOf("day")
+
+    if (date.isSame(today, "day")) return "Today"
+    if (date.isSame(yesterday, "day")) return "Yesterday"
+    return date.format("DD MMMM YYYY")
   }
+  const formatTime = (dateString: string) => moment(dateString).format("hh:mm A")
 
   return (
-    <ScrollView style={styles.container} contentInsetAdjustmentBehavior="automatic">
-      <View className="flex-row bg-red">
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Attendance</Text>
-            <Text style={styles.subtitle}>
-              {currentTime.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-            </Text>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <StatusBar barStyle="light-content" backgroundColor="#008374" />
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+
+          <View style={styles.headerInfo}>
+            <Text style={styles.headerSubtitle}>Messages & Groups</Text>
           </View>
-          <Image
-            source={{
-              uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-            }}
-            style={styles.profileImage}
-          />
-          <TouchableOpacity onPress={handleLogout}>
-            <LogOut size={20} color="red" />
+          <TouchableOpacity onPress={() => router.push('/login')}>
+            <Outdent size={20} color='#fff' />
           </TouchableOpacity>
+
         </View>
       </View>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search here"
+          placeholderTextColor="#666"
+        />
+      </View>
 
-      {/* Time Clock Section */}
-      <View style={styles.timeClockSection}>
-        <View style={styles.timeCard}>
-          <View>
-            <Text style={styles.timeText}>
-              {currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
-            </Text>
-            {lastAction && <Text style={styles.lastActionText}>{lastAction}</Text>}
-          </View>
 
-          {/* Timer Display */}
-          {isCheckedIn ? (
-            <Text style={[styles.elapsedTimeText, { color: "#059669" }]}>{formatTime(elapsedTime)}</Text>
-          ) : (
-            checkOutTime && (
-              <Text style={[styles.elapsedTimeText, { color: "#DC2626" }]}>Total Time: {formatTime(elapsedTime)}</Text>
-            )
-          )}
 
-          {/* Separate Check In/Out Buttons */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              onPress={handleCheckIn}
-              style={[styles.checkInButton, isCheckedIn && styles.disabledButton, { flex: 1, marginRight: 8 }]}
-              disabled={isCheckedIn}
-            >
-              {!isCheckedIn && <LogIn size={20} color="white" />}
-              {isCheckedIn ? (
-                <Text style={styles.timerButtonText}>{formatTime(elapsedTime)}</Text>
-              ) : (
-                <Text style={styles.buttonText}>Check In</Text>
-              )}
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={handleCheckOut}
-              style={[styles.checkOutButton, !isCheckedIn && styles.disabledButton, { flex: 1, marginLeft: 8 }]}
-              disabled={!isCheckedIn}
-            >
-              <LogOut size={20} color="white" />
-              <Text style={styles.buttonText}>Check Out</Text>
-            </TouchableOpacity>
-          </View>
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#008374" />
         </View>
-
-        {/* Quick Actions */}
-        <View style={styles.quickActionsContainer}>
-          <Text style={styles.quickActionsTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigateToScreen("attendance")}>
-              <View style={[styles.quickActionIcon, { backgroundColor: "#EEF2FF" }]}>
-                <Calendar size={24} color="#4F46E5" />
+      ) : (
+        <ScrollView style={styles.content}>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push({
+            pathname: '/messages/companyChat',
+            params: { id: companyTeam?.portId || 111, name: companyTeam?.name || "User" }
+          })}>
+            <Users color="#fff" size={24} />
+            <Text style={styles.navText}>{companyTeam?.teamname || companyTeam?.name || "teamname"}</Text>
+          </TouchableOpacity>
+          {messages.team?.map((user: any, index: number) => (
+            <TouchableOpacity key={user.userId} style={styles.chatPreview}
+              onPress={() => router.push({
+                pathname: '/messages/teamChat',
+                params: { id: user.userId }
+              })}>
+              <Image
+                source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
+                style={styles.avatar}
+              />
+              <View style={styles.chatInfo}>
+                <Text style={styles.chatName}>{user.name}</Text>
+                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.chatMessage}>{lastMessage.team[index] === "--" ? '' : lastMessage.team[index].contents}</Text>
               </View>
-              <Text style={styles.quickActionText}>Attendance</Text>
+              <View >
+                <Text style={styles.timestamp}>{lastMessage.team[index] === "--" ? '' : formatMessageDate(lastMessage.team[index].timeSent)}{"  "}</Text>
+                <Text style={styles.timestamp}>{lastMessage.team[index] === "--" ? '' : formatTime(lastMessage.team[index].timeSent)}</Text>
+              </View>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigateToScreen("payroll")}>
-              <View style={[styles.quickActionIcon, { backgroundColor: "#F0FDF4" }]}>
-                <DollarSign size={24} color="#059669" />
-              </View>
-              <Text style={styles.quickActionText}>Payroll</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigateToScreen("messages")}>
-              <View style={[styles.quickActionIcon, { backgroundColor: "#EFF6FF" }]}>
-                <MessageSquare size={24} color="#3B82F6" />
-              </View>
-              <Text style={styles.quickActionText}>Messages</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickActionButton} onPress={() => navigateToScreen("profile")}>
-              <View style={[styles.quickActionIcon, { backgroundColor: "#FEF2F2" }]}>
-                <User size={24} color="#DC2626" />
-              </View>
-              <Text style={styles.quickActionText}>Profile</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Quick Stats */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Clock size={20} color="#4F46E5" />
-            <Text style={styles.statValue}>42.5</Text>
-            <Text style={styles.statLabel}>Hours this week</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Calendar size={20} color="#6366F1" />
-            <Text style={styles.statValue}>21</Text>
-            <Text style={styles.statLabel}>Days this month</Text>
-          </View>
-        </View>
-
-        {/* Recent Attendance Section */}
-        <View style={styles.recentSection}>
-          <Text style={styles.sectionTitle}>Recent Attendance</Text>
-          {recentAttendance.map((record) => (
-            <View key={record.id} style={styles.attendanceCard}>
-              <View style={styles.attendanceHeader}>
-                <Text style={styles.attendanceDate}>{record.date}</Text>
-                <Text style={[styles.attendanceStatus, { color: getStatusColor(record.status) }]}>
-                  {record.status === "on-time" ? "On Time" : "Late"}
-                </Text>
-              </View>
-              <View style={styles.attendanceDetails}>
-                <View style={styles.timeDetail}>
-                  <LogIn size={16} color="#4F46E5" />
-                  <Text style={styles.timeDetailText}>{record.checkIn}</Text>
-                </View>
-                <View style={styles.timeDetail}>
-                  <LogOut size={16} color="#DC2626" />
-                  <Text style={styles.timeDetailText}>{record.checkOut}</Text>
-                </View>
-                <View style={styles.timeDetail}>
-                  <Clock size={16} color="#059669" />
-                  <Text style={styles.timeDetailText}>{record.duration}</Text>
-                </View>
-              </View>
-            </View>
           ))}
-        </View>
-      </View>
-    </ScrollView>
-  )
+
+          {/* <TouchableOpacity onPress={() => router.push("/(tabs)/payslip")}> */}
+          <TouchableOpacity onPress={() => router.push("/(tabs)/messages")}>
+            <View style={styles.navItem} >
+              <Plus color="#fff" size={24} />
+              <Text style={styles.navText}>Messages</Text>
+            </View>
+          </TouchableOpacity>
+          {messages.user?.map((user: any, index: number) => (
+            <TouchableOpacity key={user.userId} style={styles.chatPreview}
+              onPress={() => router.push({
+                pathname: '/messages/chat',
+                params: { id: user.userId }
+              })}>
+              <Image
+                source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
+                style={styles.avatar}
+              />
+              <View style={styles.chatInfo}>
+                <Text style={styles.chatName}>{user.name}</Text>
+                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.chatMessage}>{lastMessage.user[index] === "--" ? '' : lastMessage.user[index].contents}</Text>
+              </View>
+              <View >
+                <Text style={styles.timestamp}>{lastMessage.user[index] === "--" ? '' : formatMessageDate(lastMessage.user[index].timeSent)}{"  "}</Text>
+                <Text style={styles.timestamp}>{lastMessage.user[index] === "--" ? '' : formatTime(lastMessage.user[index].timeSent)}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+
+
+
+          <TouchableOpacity onPress={() => router.push("/(tabs)/group")}>
+            <View style={styles.navItem}>
+              <Plus color="#fff" size={24} />
+              <Text style={styles.navText}>Groups</Text>
+            </View>
+          </TouchableOpacity>
+
+          {messages.group?.map((user: any, index: number) => (
+            <TouchableOpacity key={user.id} style={styles.chatPreview}
+              onPress={() => router.push({
+                pathname: '/messages/companyChat',
+                params: { id: user?.id || 111, name: user?.name || "User" }
+              })}>
+              <Image
+                source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_group_image.png' }}
+                style={styles.avatar}
+              />
+              <View style={styles.chatInfo}>
+                <Text style={styles.chatName}>{user.name}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+          <View style={styles.navItem}>
+            <Building color="#fff" size={24} />
+            <Text style={styles.navText}>Workplace</Text>
+          </View>
+          {messages.company?.map((user: any, index: number) => (
+            <TouchableOpacity key={user.userId} style={styles.chatPreview}
+              onPress={() => router.push({
+                pathname: '/messages/workplaceChat',
+                params: { companyId: user.userId, empId: sessionData?.loginId, name: user.name }
+              })}>
+              <Image
+                source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_company_image.png' }}
+                style={styles.avatar}
+              />
+              <View style={styles.chatInfo}>
+                <Text style={styles.chatName}>{user.name}</Text>
+                {/* <Text style={styles.chatMessage}>{lastMessage[index] === "--" ? '' : lastMessage[index].contents}</Text> */}
+              </View>
+              <View >
+                <Text style={styles.timestamp}>{lastMessage.company[index] === "--" ? '' : formatMessageDate(lastMessage.company[index].timeSent)}{"  "}</Text>
+                <Text style={styles.timestamp}>{lastMessage.company[index] === "--" ? '' : formatTime(lastMessage.company[index].timeSent)}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: '#06607a',
+  },
+  searchInput: {
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+    fontSize: 16,
   },
   header: {
-    backgroundColor: "white",
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 24,
+    backgroundColor: '#008374',
+    padding: 15,
+    paddingBottom: 10,
+    paddingTop: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
-  headerRow: {
-    flexDirection: "row",
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#111827",
+  headerAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
-  subtitle: {
-    color: "#6B7280",
-    marginTop: 4,
+  headerInfo: {
+    marginLeft: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  profileImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  timeClockSection: {
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-  },
-  timeCard: {
-    backgroundColor: "white",
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 3,
-    marginBottom: 24,
-  },
-  timeText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#111827",
-  },
-  lastActionText: {
+  headerTitle: {
+    color: '#fff',
     fontSize: 14,
-    color: "#6B7280",
-    marginTop: 8,
-    textAlign: "center",
+    opacity: 0.9,
   },
-  elapsedTimeText: {
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-    marginTop: 12,
+  headerSubtitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  ellipsisContainer: {
+    position: 'relative'
+  },
+  dropdownContainer: {
+    backgroundColor: "#fff",
+    padding: 10,
+    position: 'absolute',
+    top: 35,
+    right: 0,
+    width: 90,
+    zIndex: 10,
+  },
+  timeTrackingContainer: {
+    backgroundColor: '#008374',
+    margin: 15,
+    padding: 15,
+    borderRadius: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  searchContainer: {
+    margin: 15,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 15,
+  },
+  timeBlock: {
+    alignItems: 'center',
+  },
+  timeLabel: {
+    color: '#fff',
+    fontSize: 14,
+    opacity: 0.9,
+    marginTop: 5,
+  },
+  timeValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  timerDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  timerText: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: '600',
+    marginLeft: 10,
+    fontFamily: 'monospace',
+  },
+  totalTimeText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 15,
+    opacity: 0.9,
   },
   buttonContainer: {
-    flexDirection: "row",
-    marginTop: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
   },
-  checkInButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: "#4F46E5",
-  },
-  checkOutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: "#DC2626",
-  },
-  disabledButton: {
-    opacity: 0.5,
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
   },
   buttonText: {
-    color: "white",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: '600',
     marginLeft: 8,
   },
-  timerButtonText: {
-    color: "#000",
-    fontSize: 14,
-    fontWeight: "semibold",
-
-  },
-  quickActionsContainer: {
-    marginBottom: 24,
-  },
-  quickActionsTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#111827",
-    marginBottom: 16,
-  },
-  quickActionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  quickActionButton: {
-    width: "48%",
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  quickActionText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 24,
-  },
-  statCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 16,
+  content: {
     flex: 1,
-    marginRight: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 3,
+    padding: 15,
+    paddingTop: 0,
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#111827",
-    marginTop: 8,
+  navItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#008374',
+    padding: 12,
+    borderRadius: 5,
+    marginBottom: 10,
+    justifyContent: "center"
   },
-  statLabel: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginTop: 4,
-  },
-  recentSection: {
-    marginTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#111827",
-    marginBottom: 16,
-  },
-  attendanceCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  attendanceHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  attendanceDate: {
+  navText: {
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "600",
-    color: "#111827",
+    marginLeft: 10,
+    fontWeight: '500',
+    textTransform: 'capitalize',
+    padding: 1,
   },
-  attendanceStatus: {
-    fontSize: 14,
-    fontWeight: "500",
+  chatPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    // backgroundColor: '#008374',
+    padding: 12,
+    borderRadius: 5,
+    marginBottom: 2,
   },
-  attendanceDetails: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
-  timeDetail: {
-    flexDirection: "row",
-    alignItems: "center",
+  chatInfo: {
+    flex: 1,
+    marginLeft: 10,
   },
-  timeDetailText: {
-    marginLeft: 6,
-    color: "#4B5563",
-    fontSize: 14,
-  },
-})
 
+  chatName: {
+    textTransform: 'capitalize',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  chatMessage: {
+    color: '#fff',
+    fontSize: 14,
+    opacity: 0.8,
+    width: 200,
+    overflow: 'hidden',
+
+  },
+  timestamp: {
+    color: '#fff',
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  groupItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginLeft: 10,
+  },
+  groupText: {
+    color: '#fff',
+    fontSize: 16,
+    marginLeft: 10,
+  },
+});

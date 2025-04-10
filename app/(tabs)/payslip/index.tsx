@@ -8,8 +8,7 @@ export default function HomeScreen() {
         <ScrollView style={styles.container}>
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.greeting}>Good morning,</Text>
-                    <Text style={styles.name}>John Doe</Text>
+                    <Text style={styles.name}>Payslip and Attendance</Text>
                 </View>
                 <TouchableOpacity style={styles.profileButton}>
                     <Feather name="user" size={24} color="#4f46e5" />

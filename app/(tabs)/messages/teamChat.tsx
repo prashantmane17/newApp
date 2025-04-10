@@ -1,8 +1,5 @@
-
-
-
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { useEffect, useState, useMemo, useRef } from "react"
+import { useEffect, useState, useMemo } from "react"
 import {
     View,
     Text,
@@ -16,7 +13,6 @@ import {
     StatusBar,
     Image,
     Keyboard,
-    ScrollView
 } from "react-native"
 import { Send, ArrowLeft, MoreVertical } from "lucide-react-native"
 import { useSession } from "@/context/ContextSession"
@@ -24,14 +20,12 @@ import moment from "moment"
 import { connectSocket, sendMessage as sendSocketMessage, ChatMessage } from '@/hooks/sockets/socketService'; // adjust the path as per your project structure
 import { subscribeToNotifications } from '@/hooks/sockets/socketService'; // adjust the path as per your project structure
 
-
 export default function ChatScreen() {
     const { id } = useLocalSearchParams()
     const router = useRouter()
     const { sessionData } = useSession()
     const [channelId, setChannelId] = useState("")
     const [message, setMessage] = useState("")
-    const sectionListRef = useRef<SectionList<any>>(null);
     const [messages, setMessages] = useState<any>([])
     const [userData, setUserData] = useState<any>(null)
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -54,13 +48,14 @@ export default function ChatScreen() {
             console.log("ress----", chatdata.chatChannelList[0].uuid)
             setChannelId(chatdata.chatChannelList[0].uuid);
             const data = await response.json()
-            const userMessage = data.friendList.find((user: any) => id === user.id)
+            const userMessage = data.teamList.find((user: any) => id === user.id)
             setUserData(userMessage || { name: "User", avatar: null })
             setMessages(userMessage?.message || [])
         } catch (error) {
             Alert.alert("Error", "Failed to fetch messages.")
         }
     }
+
 
     useEffect(() => {
         if (!id || !sessionData?.loginId) return;
@@ -86,6 +81,7 @@ export default function ChatScreen() {
         }
     }, [id, channelId]);
 
+
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
             setKeyboardVisible(true);
@@ -99,7 +95,6 @@ export default function ChatScreen() {
             keyboardDidHideListener.remove();
         };
     }, []);
-
     const handleSendMessage = () => {
         if (message.trim()) {
             const newMessage: ChatMessage = {
@@ -118,7 +113,20 @@ export default function ChatScreen() {
             setMessage("");
         }
     };
-
+    const sendMessage = () => {
+        if (message.trim()) {
+            setMessages([
+                ...messages,
+                {
+                    id: messages.length + 1,
+                    contents: message,
+                    authorUser: { id: sessionData?.loginId },
+                    timeSent: new Date().toISOString(),
+                },
+            ])
+            setMessage("")
+        }
+    }
 
     const formatMessageDate = (dateString: string) => {
         const date = moment(dateString)
@@ -138,7 +146,7 @@ export default function ChatScreen() {
 
         const groupedMessages: { [key: string]: any[] } = {}
 
-        messages?.forEach((msg: any) => {
+        messages.forEach((msg: any) => {
             const dateKey = moment(msg.timeSent).format("YYYY-MM-DD")
             if (!groupedMessages[dateKey]) {
                 groupedMessages[dateKey] = []
@@ -152,6 +160,7 @@ export default function ChatScreen() {
                 data: groupedMessages[date],
             }))
             .sort((a, b) => {
+                // Sort sections by date (newest last)
                 return moment(b.data[0].timeSent).isBefore(moment(a.data[0].timeSent)) ? 1 : -1
             })
     }, [messages])
@@ -202,7 +211,6 @@ export default function ChatScreen() {
             >
                 {messages.length > 0 ? (
                     <SectionList
-                        ref={sectionListRef}
                         sections={messagesByDate}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={({ item }) => (
@@ -228,6 +236,7 @@ export default function ChatScreen() {
                 ) : (
                     <EmptyChat />
                 )}
+
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -11,39 +11,59 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import CreateGroupModal from '@/components/CreateGroupModal';
-import { mockGroups } from '@/constants/mockData';
 import { useRouter } from 'expo-router';
-
+import { useSession } from '@/context/ContextSession';
 
 export default function HomeScreen() {
     const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
     const router = useRouter()
+    const { sessionData } = useSession();
+    const [groupList, setGropuList] = useState<any>([])
     const handleGroupPress = (groupId: string) => {
         router.push({
             pathname: '/(tabs)/group/chatScreen',
             params: { groupId: groupId }
         })
     };
+    const groupData = async () => {
+        try {
+            console.log("kii")
+            const response = await fetch("http://192.168.1.26:8080/fetchAllPortOfCompany-mobile", {
+                method: "GET",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+            })
+            const data = await response.json();
+            setGropuList(data.ports);
+            console.log("datatat-----", data.ports)
+        } catch (error) {
 
-    const renderGroupItem = ({ item }: { item: typeof mockGroups[0] }) => (
-        <TouchableOpacity
+        }
+    }
+    useEffect(() => {
+        groupData();
+    }, [sessionData])
+
+    const renderGroupItem = (item: any) => (
+        <View key={item.id}
             style={styles.groupItem}
-            onPress={() => handleGroupPress(item.id)}
         >
             <Image
-                source={{ uri: item.image }}
+                source={{ uri: item.profile_pic || "http://192.168.1.26:8080/resources/img/Profile/default_group_image.png" }}
                 style={styles.groupImage}
             />
             <View style={styles.groupInfo}>
                 <View style={styles.groupHeader}>
                     <Text style={styles.groupName}>{item.name}</Text>
-                    <Text style={styles.timeText}>{item.lastMessageTime}</Text>
+                    <TouchableOpacity onPress={() => handleGroupPress(item.id)}>
+                        <Text style={styles.timeText}>{item.status}</Text>
+                    </TouchableOpacity>
                 </View>
-                <Text style={styles.lastMessage} numberOfLines={1}>
+                {/* <Text style={styles.lastMessage} numberOfLines={1}>
                     {item.lastMessage}
-                </Text>
+                </Text> */}
             </View>
-        </TouchableOpacity>
+        </View>
     );
 
     return (
@@ -55,11 +75,11 @@ export default function HomeScreen() {
                     onPress={() => setIsCreateModalVisible(true)}
                 >
                     <Text style={styles.createButtonText}>Create Group</Text>
-                    <Feather name="plus" size={16} color="white" />
+                    <Feather name="plus" size={16} color="#000" />
                 </TouchableOpacity>
             </View>
 
-            <FlatList
+            {/* <FlatList
                 data={mockGroups}
                 renderItem={renderGroupItem}
                 keyExtractor={(item) => item.id}
@@ -69,7 +89,13 @@ export default function HomeScreen() {
                         <Text style={styles.emptyText}>No groups yet. Create your first group!</Text>
                     </View>
                 }
-            />
+            /> */}
+            <View>
+                {groupList.map((item: any) => (
+                    renderGroupItem(item)
+
+                ))}
+            </View>
 
             <CreateGroupModal
                 visible={isCreateModalVisible}
@@ -92,7 +118,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: StatusBar.currentHeight || 0,
     },
     header: {
         flexDirection: 'row',
@@ -101,21 +126,24 @@ const styles = StyleSheet.create({
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
+        backgroundColor: '#008374',
+
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
+        color: "#fff",
     },
     createButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#6366f1',
+        backgroundColor: '#ffffff',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,
     },
     createButtonText: {
-        color: 'white',
+        color: '#000',
         marginRight: 8,
         fontWeight: '500',
     },
@@ -142,7 +170,7 @@ const styles = StyleSheet.create({
     groupHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'baseline',
+        alignItems: 'center',
         marginBottom: 4,
     },
     groupName: {
@@ -150,8 +178,15 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     timeText: {
-        fontSize: 12,
-        color: '#6b7280',
+        fontSize: 14,
+        textTransform: 'capitalize',
+        padding: 6,
+        borderWidth: 1,
+        marginRight: 15,
+        borderRadius: 7,
+        backgroundColor: '#008060',
+        color: '#fff',
+        borderColor: '#008060',
     },
     lastMessage: {
         fontSize: 14,

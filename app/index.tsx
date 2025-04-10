@@ -16,8 +16,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path, G, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Eye, EyeOff } from 'lucide-react-native';
+import { useSession } from '@/context/ContextSession';
 
 export default function LoginScreen() {
+    const { getSessionDetails } = useSession();
     const [currentScreen, setCurrentScreen] = useState('login');
     const [email, setEmail] = useState('');
     const router = useRouter();
@@ -43,7 +45,7 @@ export default function LoginScreen() {
     const handleLogin = async () => {
         console.log("joio")
         const response = await fetch("http://192.168.1.26:8080/employee-login-mobile?workinguserName=" + email, {
-            method: "POST", // or "GET" based on API requirement
+            method: "POST",
             headers: { "Content-Type": "application/json" },
         });
         const formData = new URLSearchParams();
@@ -57,11 +59,26 @@ export default function LoginScreen() {
         });
 
         const data = await passwordRes.json();
-        console.log("huii", data)
         if (response.ok) {
             if (data.validated) {
-                Alert.alert("Sucsess", "Loged in suceessfully!!")
-                router.replace('/(tabs)');
+                console.log("hiiii")
+                try {
+                    const homeResponse = await fetch(`http://192.168.1.26:8080//login-user-mobile?username=${encodeURIComponent(email)}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    const homdata = await homeResponse.json();
+                    console.log("reddddd------", homdata);
+                    getSessionDetails();
+                    Alert.alert("Sucsess", "Loged in suceessfully!!")
+                    router.replace('/(tabs)');
+                }
+                catch (err) {
+                    console.log("eroo----", err)
+                }
             } else {
                 Alert.alert("error", "Wrong password!!")
             }
@@ -144,10 +161,7 @@ export default function LoginScreen() {
             <Text style={styles.welcomeText}>Welcome!</Text>
             <View style={styles.crmTextContainer}>
                 <Text style={styles.toText}>to </Text>
-                <Text className='text-gray-100'>Portstay</Text>
-            </View>
-            <View className="flex-1 items-center justify-center bg-blue-500">
-                <Text className="text-white text-lg font-bold">Hello, NativeWind!</Text>
+                <Text style={styles.crmText}>Portstay</Text>
             </View>
 
             <View style={styles.inputContainer}>
