@@ -1,23 +1,8 @@
 "use client"
 
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { useEffect, useState, useMemo } from "react"
-import {
-    View,
-    Text,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    SectionList,
-    KeyboardAvoidingView,
-    Platform,
-    Alert,
-    StatusBar,
-    Image,
-    Keyboard,
-    ActivityIndicator,
-    ToastAndroid,
-} from "react-native"
+import { useEffect, useState, useMemo, useRef } from "react"
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, KeyboardAvoidingView, Platform, Alert, StatusBar, Image, Keyboard, ActivityIndicator, ToastAndroid } from "react-native"
 import { Send, ArrowLeft, MoreVertical, Download } from "lucide-react-native"
 import { useSession } from "@/context/ContextSession"
 import moment from "moment"
@@ -32,6 +17,7 @@ export default function ChatScreen() {
     const [messages, setMessages] = useState<any>([])
     const [images, setImages] = useState<any>([])
     const [userData, setUserData] = useState<any>(null)
+    const sectionListRef = useRef<SectionList>(null)
     const [isKeyboardVisible, setKeyboardVisible] = useState(false)
     const [downloadingImages, setDownloadingImages] = useState<{ [key: string]: boolean }>({})
 
@@ -48,7 +34,7 @@ export default function ChatScreen() {
                 } else {
                     const data = await response.json()
                     const userMessage = data.getAllPostOfPort?.map((user: any) => user.post.images)
-                    console.log("dtata----", userMessage)
+                    // console.log("dtata----", data.getAllPostOfPort)
                     setUserData({ name: name || "User", avatar: null })
                     setImages(userMessage)
                     setMessages(data.getAllPostOfPort || [])
@@ -103,41 +89,73 @@ export default function ChatScreen() {
             setDownloadingImages((prev) => ({ ...prev, [imageName]: false }))
         }
     }
-    const sendMessage = () => {
-        if (message.trim()) {
-            setMessages([
-                ...messages,
-                {
-                    id: messages.length + 1,
-                    contents: message,
-                    authorUser: { id: sessionData?.loginId },
-                    timeSent: new Date().toISOString(),
-                },
-            ])
-            setMessage("")
-        }
-    }
+    // const sendMessage = () => {
+    //     if (message.trim()) {
+    //         const newMessage = {
+    //             post: {
+    //                 id: messages.length + 1,
+    //                 postDescription: message,
+    //                 postedBy: { id: sessionData?.loginId },
+    //                 date: moment().format("DD MMM YYYY [at] HH:mm"),
+    //             },
+    //             postedBy: {
+    //                 id: sessionData?.loginId,
+    //                 fullName: sessionData?.name,
+    //             }
+    //         }
+    //         setMessages([...messages, newMessage])
+    //         setMessage("")
+    //     }
+    // }
+
 
     const formatMessageDate = (dateString: string) => {
-        const date = moment(dateString)
-        const today = moment().startOf("day")
-        const yesterday = moment().subtract(1, "day").startOf("day")
+        const date = moment(dateString, ["DD MMM YYYY ", "YYYY-MM-DD"])
+        const now = moment()
+        // const diffMinutes = now.diff(date, 'minutes')
+        // const diffHours = now.diff(date, 'hours')
+        const diffDays = now.startOf('day').diff(date.startOf('day'), 'days')
 
-        if (date.isSame(today, "day")) return "Today"
-        if (date.isSame(yesterday, "day")) return "Yesterday"
-        return date.format("DD MMMM YYYY")
+        if (diffDays === 0) {
+
+            return "Today"
+        }
+        if (diffDays === 1) {
+            return "Yesterday"
+        }
+        return date.format("DD MMM YYYY")
     }
+    const convertAgoToDate = (text: string) => {
+        const [valueStr, rawUnit] = text.split(' ');
+        const value = parseInt(valueStr);
 
-    const formatTime = (dateString: string) => moment(dateString).format("hh:mm A")
+        let unit: moment.unitOfTime.DurationConstructor;
 
+        if (rawUnit.toLowerCase().startsWith('hr')) {
+            unit = 'hours';
+        } else if (rawUnit.toLowerCase().startsWith('min')) {
+            unit = 'minutes';
+        } else {
+            throw new Error('Unsupported time unit');
+        }
+
+        const dateTime = moment().subtract(value, unit);
+        return dateTime.format('YYYY-MM-DD HH:mm:ss');
+    };
     const messagesByDate = useMemo(() => {
         if (messages.length === 0) return []
 
         const groupedMessages: { [key: string]: any[] } = {}
 
         messages.forEach((msg: any) => {
-            const dateKey = moment(msg.post.date, "DD MMM YYYY [at] HH:mm").format("YYYY-MM-DD")
+            // Parse the date consistently whether it's relative or absolute
+            if (msg.post?.date.includes('ago')) {
+                msg.post.date = convertAgoToDate(msg.post.date)
+            }
+            const msgDate = moment(msg.post?.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
+            const dateKey = msgDate.format("YYYY-MM-DD")
             if (!groupedMessages[dateKey]) {
+                console.log("dateKey----", dateKey)
                 groupedMessages[dateKey] = []
             }
             groupedMessages[dateKey].push(msg)
@@ -146,16 +164,19 @@ export default function ChatScreen() {
         return Object.keys(groupedMessages)
             .map((date) => ({
                 title: formatMessageDate(date),
-                data: groupedMessages[date].sort((a, b) =>
-                    moment(a.post.date, "DD MMM YYYY [at] HH:mm").diff(moment(b.post.date, "DD MMM YYYY [at] HH:mm")),
-                ),
+                data: groupedMessages[date].sort((a, b) => {
+                    const dateA = moment(a.post.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
+                    const dateB = moment(b.post.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
+                    return dateB.diff(dateA)
+                }),
             }))
-            .sort((a, b) =>
-                moment(a.data[0].post.date, "DD MMM YYYY [at] HH:mm").diff(
-                    moment(b.data[0].post.date, "DD MMM YYYY [at] HH:mm"),
-                ),
-            )
+            .sort((a, b) => {
+                const dateA = moment(a.data[0].post.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
+                const dateB = moment(b.data[0].post.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
+                return dateB.diff(dateA) // Sort in descending order (newest first)
+            })
     }, [messages])
+
 
     const cleanHtml = (html: any) => {
         return html
@@ -169,7 +190,6 @@ export default function ChatScreen() {
     }
 
     const HtmlRenderer = (cleanedHtml: string) => {
-        console.log("cleanedHtml------------", cleanedHtml)
         const lines = cleanedHtml.split("/n")?.map((line: any, index: number) => <Text key={index}>{line}</Text>)
 
         return <View>{lines}</View>
@@ -201,7 +221,46 @@ export default function ChatScreen() {
             </View>
         )
     }
+    const scrollToLatest = () => {
+        if (sectionListRef.current && messagesByDate.length > 0) {
+            const lastSectionIndex = messagesByDate.length - 1
+            const lastItemIndex = messagesByDate[lastSectionIndex].data.length - 1
+            sectionListRef.current.scrollToLocation({
+                sectionIndex: lastSectionIndex,
+                itemIndex: lastItemIndex,
+                animated: true
+            })
+        }
+    }
 
+    // Update sendMessage to scroll after sending
+    const sendMessage = () => {
+        if (message.trim()) {
+            const newMessage = {
+                post: {
+                    id: messages.length + 1,
+                    postDescription: message,
+                    postedBy: { id: sessionData?.loginId },
+                    date: moment().format("DD MMM YYYY [at] HH:mm"),
+                },
+                postedBy: {
+                    id: sessionData?.loginId,
+                    fullName: sessionData?.name,
+                }
+            }
+            setMessages([...messages, newMessage])
+            setMessage("")
+            // Scroll to latest message after state update
+            setTimeout(scrollToLatest, 100)
+        }
+    }
+    const FormateDate = (date: string) => {
+        if (date.includes('at')) {
+            const timePart = date.split("at")[1].trim()
+            return moment(timePart, "HH:mm").format("h:mm A")
+        }
+        return moment(date).format("h:mm A")
+    }
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#128C7E" />
@@ -256,8 +315,9 @@ export default function ChatScreen() {
                 </View>
                 {messages.length > 0 ? (
                     <SectionList
+                        ref={sectionListRef}
                         sections={messagesByDate}
-                        keyExtractor={(item) => item.post.id.toString()}
+                        keyExtractor={(item) => item.post?.id?.toString()}
                         renderItem={({ item }) => (
                             <View
                                 style={[
@@ -272,11 +332,11 @@ export default function ChatScreen() {
                                         imageName={item.post?.images?.imageNames}
                                     />
                                 )}
-
                                 <Text style={styles.messageText}>{HtmlRenderer(cleanHtml(item.post.postDescription || "--"))}</Text>
-                                <Text style={styles.timeText}>{item.date}</Text>
+                                <Text style={styles.timeText}>{FormateDate(item.post?.date)}</Text>
                             </View>
                         )}
+
                         renderSectionHeader={({ section: { title } }) => (
                             <View style={styles.dateSeparator}>
                                 <Text style={styles.dateText}>{title}</Text>
@@ -286,6 +346,7 @@ export default function ChatScreen() {
                         contentContainerStyle={styles.listContent}
                         inverted={false}
                     />
+
                 ) : (
                     <EmptyChat />
                 )}

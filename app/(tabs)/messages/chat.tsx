@@ -28,9 +28,9 @@ import { subscribeToNotifications } from '@/hooks/sockets/socketService'; // adj
 
 export default function ChatScreen() {
     const { id } = useLocalSearchParams()
-    console.log("id----", id)
     const router = useRouter()
     const { sessionData } = useSession()
+    console.log(sessionData?.loginId, "id----", id)
     const [channelId, setChannelId] = useState("")
     const [message, setMessage] = useState("")
     const [isLoading, setIsLoading] = useState(false)
@@ -50,7 +50,7 @@ export default function ChatScreen() {
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
             })
-            const chatResponse = await fetch(`http://192.168.1.26:8080/api/private-chat/mobile-establishchannel/${sessionData?.userId}/${id}`, {
+            const chatResponse = await fetch(`http://192.168.1.26:8080/api/private-chat/mobile-establishchannel/${sessionData?.loginId}/${id}`, {
                 method: "GET",
                 credentials: "include",
                 headers: {
@@ -58,7 +58,8 @@ export default function ChatScreen() {
                 },
             });
             const data = await response.json()
-            const userMessage = data.friendList || data.superadminList.find((user: any) => id === user.userId)
+            console.log("dhuu----", data);
+            const userMessage = data.friendList || data.superadminList.find((user: any) => id === user.id)
 
             const chatdata = await chatResponse.json();
             console.log("data----", chatdata);

@@ -8,6 +8,7 @@ import {
     Image,
     SafeAreaView,
     StatusBar,
+    Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import CreateGroupModal from '@/components/CreateGroupModal';
@@ -18,13 +19,8 @@ export default function HomeScreen() {
     const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
     const router = useRouter()
     const { sessionData } = useSession();
+    const [isLoading, setIsLoading] = useState(false);
     const [groupList, setGropuList] = useState<any>([])
-    const handleGroupPress = (groupId: string) => {
-        router.push({
-            pathname: '/(tabs)/group/chatScreen',
-            params: { groupId: groupId }
-        })
-    };
     const groupData = async () => {
         try {
             console.log("kii")
@@ -35,7 +31,7 @@ export default function HomeScreen() {
             })
             const data = await response.json();
             setGropuList(data.ports);
-            console.log("datatat-----", data.ports)
+            // console.log("datatat-----", data.ports)
         } catch (error) {
 
         }
@@ -44,6 +40,32 @@ export default function HomeScreen() {
         groupData();
     }, [sessionData])
 
+    const handleGroupPress = async (groupId: string, status: string) => {
+        setIsLoading(true)
+        console.log(status, "groupId----", groupId)
+        try {
+            let url = ""
+            if (status === "message") {
+                url = `http://192.168.1.26:8080/port.RequestAction?action=message&portId=${groupId}`
+            } else {
+                url = `http://192.168.1.26:8080/port.RequestAction?action=leave&portId=${groupId}`
+            }
+            const response = await fetch(url, {
+                method: "GET",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+            })
+            if (response.ok) {
+                console.log("response----", response.ok)
+                groupData();
+                setIsLoading(false)
+            }
+        } catch (error) {
+            Alert.alert("Error", "Failed to load group data")
+        } finally {
+            setIsLoading(false)
+        }
+    }
     const renderGroupItem = (item: any) => (
         <View key={item.id}
             style={styles.groupItem}
@@ -57,13 +79,11 @@ export default function HomeScreen() {
             <View style={styles.groupInfo}>
                 <View style={styles.groupHeader}>
                     <Text style={styles.groupName}>{item.name}</Text>
-                    <TouchableOpacity onPress={() => handleGroupPress(item.id)}>
-                        <Text style={styles.timeText}>{item.status}</Text>
+                    <TouchableOpacity onPress={() => handleGroupPress(item.id, item.status)}>
+                        <Text style={styles.timeText}>{item.status === "message" ? "Add" : "Remove"}</Text>
                     </TouchableOpacity>
                 </View>
-                {/* <Text style={styles.lastMessage} numberOfLines={1}>
-                    {item.lastMessage}
-                </Text> */}
+
             </View>
         </View>
     );
@@ -71,7 +91,13 @@ export default function HomeScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Group Chats</Text>
+                <View style={styles.backButton}>
+                    <TouchableOpacity onPress={() => router.back()}>
+                        <Feather name="arrow-left" size={24} color="#fff" />
+                    </TouchableOpacity>
+
+                    <Text style={styles.title}>Group Chats</Text>
+                </View>
                 <TouchableOpacity
                     style={styles.createButton}
                     onPress={() => setIsCreateModalVisible(true)}
@@ -111,11 +137,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
+        paddingRight: 16,
+        paddingBottom: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
         backgroundColor: '#008374',
 
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        gap: 7,
     },
     title: {
         fontSize: 24,
@@ -175,6 +209,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#008060',
         color: '#fff',
         borderColor: '#008060',
+        width: 80,
+        textAlign: 'center',
     },
     lastMessage: {
         fontSize: 14,

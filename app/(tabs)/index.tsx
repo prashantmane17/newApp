@@ -151,7 +151,7 @@ export default function ChatInterface() {
             <TouchableOpacity key={user.userId} style={styles.chatPreview}
               onPress={() => router.push({
                 pathname: '/messages/chat',
-                params: { id: user.userId }
+                params: { id: user.id }
               })}>
               <Image
                 source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
