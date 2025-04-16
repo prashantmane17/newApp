@@ -27,10 +27,10 @@ import { subscribeToNotifications } from '@/hooks/sockets/socketService'; // adj
 
 
 export default function ChatScreen() {
-    const { id } = useLocalSearchParams()
+    const { id, name } = useLocalSearchParams()
     const router = useRouter()
     const { sessionData } = useSession()
-    console.log(sessionData?.loginId, "id----", id)
+    console.log(name, "id----", id)
     const [channelId, setChannelId] = useState("")
     const [message, setMessage] = useState("")
     const [isLoading, setIsLoading] = useState(false)
@@ -60,13 +60,13 @@ export default function ChatScreen() {
             const data = await response.json()
             console.log("dhuu----", data);
             const userMessage = data.friendList || data.superadminList.find((user: any) => id === user.id)
-
+            const branchMessage = data.branchList.find((branch: any) => id === branch.id)
             const chatdata = await chatResponse.json();
             console.log("data----", chatdata);
             console.log("ress----", chatdata.chatChannelList[0].uuid)
             setChannelId(chatdata.chatChannelList[0].uuid);
-            setUserData(userMessage || { name: "User", avatar: null })
-            setMessages(userMessage?.message || [])
+            setUserData(userMessage || branchMessage || name || { name: "User", avatar: null })
+            setMessages(userMessage?.message || branchMessage?.message || [])
         } catch (error) {
             setIsLoading(false);
             Alert.alert("Error", "Failed to fetch messages.")
@@ -195,10 +195,10 @@ export default function ChatScreen() {
                         <Image source={{ uri: userData.avatar }} style={styles.avatar} />
                     ) : (
                         <View style={styles.avatarPlaceholder}>
-                            <Text style={styles.avatarText}>{userData?.name?.charAt(0) || "U"}</Text>
+                            <Text style={styles.avatarText}>{userData?.name?.charAt(0) || name?.charAt(0) || "U"}</Text>
                         </View>
                     )}
-                    <Text style={styles.userName}>{userData?.name || "User"}</Text>
+                    <Text style={styles.userName}>{userData?.name || name || "User"}</Text>
                 </View>
 
                 <TouchableOpacity style={styles.moreButton} activeOpacity={0.7}>

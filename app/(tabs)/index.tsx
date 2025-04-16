@@ -16,6 +16,7 @@ export default function ChatInterface() {
   const [lastMessage, setLastMessage] = useState<any>({ user: [], team: [], group: [], company: [] });
   const [companyTeam, setCompanyTeam] = useState<any>({})
   const [loading, setLoading] = useState<boolean>(false);
+  const [branchList, setBranchList] = useState<any>([])
 
   const friendsList = async () => {
     console.log("juu")
@@ -32,16 +33,17 @@ export default function ChatInterface() {
       });
 
       const data = await response.json();
-      console.log("data----", data)
       setCompanyTeam(data.team || data.helpdesk || data.HumanResources || data.support);
-
+      if (sessionData?.role === "Superadmin") {
+        setBranchList(data.branchList)
+      }
       const extractLastMessage = (list: any) => list?.map((msg: any) => msg.message?.slice(-1)[0] || '--');
       setLastMessage({
         user: extractLastMessage(data.friendList || data.superadminList),
         team: extractLastMessage(data.teamList),
         company: extractLastMessage(data.workingCompany)
       });
-      console.log("data----", data.superadminList)
+      console.log("data----", data.branchList)
       setMessages({
         user: data.friendList || data.superadminList,
         team: data.teamList,
@@ -147,11 +149,34 @@ export default function ChatInterface() {
               <Text style={styles.navText}>Messages</Text>
             </View>
           </TouchableOpacity>
+          {sessionData?.role === "Superadmin" && (
+
+            branchList?.map((branch: any, index: number) => (
+              <TouchableOpacity key={branch.userId} style={styles.chatPreview}
+                onPress={() => router.push({
+                  pathname: '/messages/chat',
+                  params: { id: branch.id, name: branch.name + " (" + branch.branch + ")" }
+                })}>
+                <Image
+                  source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_company_image.png' }}
+                  style={styles.avatar}
+                />
+                <View style={styles.chatInfo}>
+                  <Text style={styles.chatName}>{branch.name} ({branch.branch})</Text>
+                  <Text numberOfLines={1} ellipsizeMode="tail" style={styles.chatMessage}>{branch.message[branch.message.length - 1] ? branch.message[branch.message.length - 1].contents : ''}</Text>
+                </View>
+                <View >
+                  <Text style={styles.timestamp}>{branch.message[branch.message.length - 1] ? formatMessageDate(branch.message[branch.message.length - 1].timeSent) : ''}{"  "}</Text>
+                  <Text style={styles.timestamp}>{branch.message[branch.message.length - 1] ? formatTime(branch.message[branch.message.length - 1].timeSent) : ''}</Text>
+                </View>
+              </TouchableOpacity>
+            )))}
+
           {messages.user?.map((user: any, index: number) => (
             <TouchableOpacity key={user.userId} style={styles.chatPreview}
               onPress={() => router.push({
                 pathname: '/messages/chat',
-                params: { id: user.id }
+                params: { id: user.id, name: user.name }
               })}>
               <Image
                 source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
