@@ -29,6 +29,12 @@ export const connectSocket = (channelId: string, onMessageReceived: MessageCallb
 
     stompClient = new Client({
         webSocketFactory: () => socket as WebSocket,
+        connectHeaders: {
+            login: 'crm@vivo.com',
+            passcode: '123456789',
+            'accept-version': '1.1,1.0',
+            'heart-beat': '10000,10000'
+        },
         debug: (str: string) => console.log(str),
         reconnectDelay: 5000,
         onConnect: () => {

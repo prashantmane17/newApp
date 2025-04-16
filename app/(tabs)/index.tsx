@@ -11,39 +11,39 @@ import { ActivityIndicator } from 'react-native';
 
 export default function ChatInterface() {
   const router = useRouter();
-  const { sessionData } = useSession();
+  const { sessionData, handleLogout } = useSession();
   const [messages, setMessages] = useState<any>({ user: [], team: [], group: [], company: [] });
   const [lastMessage, setLastMessage] = useState<any>({ user: [], team: [], group: [], company: [] });
   const [companyTeam, setCompanyTeam] = useState<any>({})
   const [loading, setLoading] = useState<boolean>(false);
 
   const friendsList = async () => {
+    console.log("juu")
     try {
       setLoading(true); // Start loading
-      const response = await fetch('http://192.168.1.26:8080/employee.chatUsers-mobile', {
+      let url = "http://192.168.1.26:8080/employee.chatUsers-mobile"
+      if (sessionData?.role === "Superadmin") {
+        url = "http://192.168.1.26:8080/superadmin.chatUsers-Mobile"
+      }
+      const response = await fetch(url, {
         method: "GET",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
-      // const postResponse = await fetch('http://192.168.1.26:8080/api-leads-add', {
-      //   method: "POST",
-      //   credentials: "include",
-      //   headers: { "Content-Type": "application/json" },
-      // });
-      // const postdata = await postResponse.json();
-      // console.log("postdata----", postdata)
+
       const data = await response.json();
+      console.log("data----", data)
       setCompanyTeam(data.team || data.helpdesk || data.HumanResources || data.support);
 
       const extractLastMessage = (list: any) => list?.map((msg: any) => msg.message?.slice(-1)[0] || '--');
       setLastMessage({
-        user: extractLastMessage(data.friendList),
+        user: extractLastMessage(data.friendList || data.superadminList),
         team: extractLastMessage(data.teamList),
         company: extractLastMessage(data.workingCompany)
       });
-
+      console.log("data----", data.superadminList)
       setMessages({
-        user: data.friendList,
+        user: data.friendList || data.superadminList,
         team: data.teamList,
         group: data.portList,
         company: data.workingCompany
@@ -82,7 +82,7 @@ export default function ChatInterface() {
           <View style={styles.headerInfo}>
             <Text style={styles.headerSubtitle}>Messages & Groups</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push('/login')}>
+          <TouchableOpacity onPress={() => handleLogout()}>
             <Outdent size={20} color='#fff' />
           </TouchableOpacity>
 
@@ -106,33 +106,39 @@ export default function ChatInterface() {
         </View>
       ) : (
         <ScrollView style={styles.content}>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push({
-            pathname: '/messages/companyChat',
-            params: { id: companyTeam?.portId || 111, name: companyTeam?.name || "User" }
-          })}>
-            <Users color="#fff" size={24} />
-            <Text style={styles.navText}>{companyTeam?.teamname || companyTeam?.name || "teamname"}</Text>
-          </TouchableOpacity>
-          {messages.team?.map((user: any, index: number) => (
-            <TouchableOpacity key={user.userId} style={styles.chatPreview}
-              onPress={() => router.push({
-                pathname: '/messages/teamChat',
-                params: { id: user.userId }
-              })}>
-              <Image
-                source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
-                style={styles.avatar}
-              />
-              <View style={styles.chatInfo}>
-                <Text style={styles.chatName}>{user.name}</Text>
-                <Text numberOfLines={1} ellipsizeMode="tail" style={styles.chatMessage}>{lastMessage.team[index] === "--" ? '' : lastMessage.team[index].contents}</Text>
-              </View>
-              <View >
-                <Text style={styles.timestamp}>{lastMessage.team[index] === "--" ? '' : formatMessageDate(lastMessage.team[index].timeSent)}{"  "}</Text>
-                <Text style={styles.timestamp}>{lastMessage.team[index] === "--" ? '' : formatTime(lastMessage.team[index].timeSent)}</Text>
-              </View>
+          {sessionData?.role !== "Superadmin" && (
+            <TouchableOpacity style={styles.navItem} onPress={() => router.push({
+              pathname: '/messages/companyChat',
+              params: { id: companyTeam?.portId || 111, name: companyTeam?.name || "User" }
+            })}>
+              <Users color="#fff" size={24} />
+              <Text style={styles.navText}>{companyTeam?.teamname || companyTeam?.name || "teamname"}</Text>
             </TouchableOpacity>
-          ))}
+          )}
+          {sessionData?.role !== "Superadmin" && (
+
+            messages.team?.map((user: any, index: number) => (
+              <TouchableOpacity key={user.userId} style={styles.chatPreview}
+                onPress={() => router.push({
+                  pathname: '/messages/teamChat',
+                  params: { id: user.userId }
+                })}>
+                <Image
+                  source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
+                  style={styles.avatar}
+                />
+                <View style={styles.chatInfo}>
+                  <Text style={styles.chatName}>{user.name}</Text>
+                  <Text numberOfLines={1} ellipsizeMode="tail" style={styles.chatMessage}>{lastMessage.team[index] === "--" ? '' : lastMessage.team[index].contents}</Text>
+                </View>
+                <View >
+                  <Text style={styles.timestamp}>{lastMessage.team[index] === "--" ? '' : formatMessageDate(lastMessage.team[index].timeSent)}{"  "}</Text>
+                  <Text style={styles.timestamp}>{lastMessage.team[index] === "--" ? '' : formatTime(lastMessage.team[index].timeSent)}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+
 
           {/* <TouchableOpacity onPress={() => router.push("/(tabs)/payslip")}> */}
           <TouchableOpacity onPress={() => router.push("/(tabs)/messages")}>

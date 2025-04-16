@@ -7,11 +7,13 @@ type SessionData = Record<string, any> | null;
 interface SessionContextType {
     sessionData: SessionData;
     getSessionDetails: () => void;
+    handleLogout: () => void;
 }
 
 const SessionContext = createContext<SessionContextType>({
     sessionData: null,
     getSessionDetails: () => { },
+    handleLogout: () => { },
 });
 
 interface SessionProviderProps {
@@ -32,10 +34,18 @@ export const SessionProvider = ({ children }: SessionProviderProps) => {
 
             const text = await response.text();
             try {
+                setSessionData(null);
                 const data = JSON.parse(text);
+                console.log("kii----", data)
                 setSessionData(data ?? {});
-                router.push('/(tabs)')
-            } catch (jsonError) {
+                if (data.loginId !== null && data.loginId !== undefined && data.loginId !== "") {
+                    router.push('/(tabs)');
+                }
+                else {
+                    router.replace('/login');
+                }
+            }
+            catch (jsonError) {
                 console.error("JSON Parsing Error:", jsonError);
                 Alert.alert("Error", "Invalid JSON response from the server.");
             }
@@ -44,13 +54,33 @@ export const SessionProvider = ({ children }: SessionProviderProps) => {
             Alert.alert("Error", "Failed to fetch session details. Please try again.");
         }
     };
+    const handleLogout = async () => {
+        try {
+            const response = await fetch('http://192.168.1.26:8080/signout', {
+                method: 'GET',
+                credentials: 'include', // Important: to include cookies
+            });
+            console.log("response----", response)
+            if (response.redirected || response.ok) {
+                // Optional: You can also navigate to lo/gin screen or show a message
+                setSessionData(null);
+                Alert.alert('Logged out successfully');
+                router.replace('/login'); // assuming you're using React Navigation
+            } else {
+                Alert.alert('Logout failed');
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            Alert.alert('An error occurred during logout');
+        }
+    };
 
     useEffect(() => {
         getSessionDetails();
     }, []);
 
     return (
-        <SessionContext.Provider value={{ sessionData, getSessionDetails }}>
+        <SessionContext.Provider value={{ sessionData, getSessionDetails, handleLogout }}>
             {children}
         </SessionContext.Provider>
     );

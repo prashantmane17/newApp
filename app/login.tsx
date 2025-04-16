@@ -45,7 +45,7 @@ export default function LoginScreen() {
     const handleLogin = async () => {
         console.log("joio")
         const response = await fetch("http://192.168.1.26:8080/employee-login-mobile?workinguserName=" + email, {
-            method: "POST", // or "GET" based on API requirement
+            method: "POST",
             headers: { "Content-Type": "application/json" },
         });
         const formData = new URLSearchParams();
@@ -69,12 +69,24 @@ export default function LoginScreen() {
                             "Content-Type": "application/json",
                         },
                     });
-
-                    const homdata = await homeResponse.json();
-                    console.log("reddddd------", homdata);
+                    if (homeResponse.ok) {
+                        const homdata = await homeResponse.json();
+                        console.log("reddddd------", homeResponse);
+                    }
+                    // else {
+                    //     const companyResponse = await fetch(`http://192.168.1.26:8080/company-home_mobile?username=${encodeURIComponent(email)}`, {
+                    //         method: "GET",
+                    //         headers: {
+                    //             "Content-Type": "application/json",
+                    //         },
+                    //     });
+                    //     // console.log("companyResponse----", companyResponse) 
+                    //     const companyData = await companyResponse.text();
+                    //     console.log("companyData----", companyData);
+                    // }
                     getSessionDetails();
                     Alert.alert("Sucsess", "Loged in suceessfully!!")
-                    router.replace('/(tabs)');
+                    // router.replace('/(tabs)');
                 }
                 catch (err) {
                     console.log("eroo----", err)
@@ -163,7 +175,6 @@ export default function LoginScreen() {
                 <Text style={styles.toText}>to </Text>
                 <Text style={styles.crmText}>Portstay</Text>
             </View>
-
 
             <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Emial</Text>

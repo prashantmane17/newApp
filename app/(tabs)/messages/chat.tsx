@@ -16,7 +16,8 @@ import {
     StatusBar,
     Image,
     Keyboard,
-    ScrollView
+    ScrollView,
+    ActivityIndicator
 } from "react-native"
 import { Send, ArrowLeft, MoreVertical } from "lucide-react-native"
 import { useSession } from "@/context/ContextSession"
@@ -27,38 +28,50 @@ import { subscribeToNotifications } from '@/hooks/sockets/socketService'; // adj
 
 export default function ChatScreen() {
     const { id } = useLocalSearchParams()
+    console.log("id----", id)
     const router = useRouter()
     const { sessionData } = useSession()
     const [channelId, setChannelId] = useState("")
     const [message, setMessage] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
     const sectionListRef = useRef<SectionList<any>>(null);
     const [messages, setMessages] = useState<any>([])
     const [userData, setUserData] = useState<any>(null)
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const friendsList = async () => {
+        setIsLoading(true);
         try {
-            const response = await fetch("http://192.168.1.26:8080/employee.chatUsers-mobile", {
+            let url = "http://192.168.1.26:8080/employee.chatUsers-mobile"
+            if (sessionData?.role === "Superadmin") {
+                url = "http://192.168.1.26:8080/superadmin.chatUsers-Mobile"
+            }
+            const response = await fetch(url, {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
             })
-            const chatResponse = await fetch(`http://192.168.1.26:8080/api/private-chat/mobile-establishchannel/${sessionData?.loginId}/${id}`, {
+            const chatResponse = await fetch(`http://192.168.1.26:8080/api/private-chat/mobile-establishchannel/${sessionData?.userId}/${id}`, {
                 method: "GET",
                 credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
             });
+            const data = await response.json()
+            const userMessage = data.friendList || data.superadminList.find((user: any) => id === user.userId)
 
             const chatdata = await chatResponse.json();
+            console.log("data----", chatdata);
             console.log("ress----", chatdata.chatChannelList[0].uuid)
             setChannelId(chatdata.chatChannelList[0].uuid);
-            const data = await response.json()
-            const userMessage = data.friendList.find((user: any) => id === user.id)
             setUserData(userMessage || { name: "User", avatar: null })
             setMessages(userMessage?.message || [])
         } catch (error) {
+            setIsLoading(false);
             Alert.alert("Error", "Failed to fetch messages.")
+        }
+        finally {
+            setIsLoading(false);
         }
     }
 
@@ -199,8 +212,8 @@ export default function ChatScreen() {
                     isKeyboardVisible && styles.keyboardOpenStyle // Apply different styles
                 ]}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-            >
-                {messages.length > 0 ? (
+            >{!isLoading ? (
+                messages.length > 0 ? (
                     <SectionList
                         ref={sectionListRef}
                         sections={messagesByDate}
@@ -227,7 +240,13 @@ export default function ChatScreen() {
                     />
                 ) : (
                     <EmptyChat />
-                )}
+                )
+
+            ) : (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#008374" />
+                </View>
+            )}
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}

@@ -10,6 +10,7 @@ import {
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
+    Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
@@ -26,14 +27,14 @@ export default function CreateGroupModal({
     onCreateGroup,
 }: CreateGroupModalProps) {
     const [groupName, setGroupName] = useState('');
+    const [loading, setLoading] = useState(false);
     const [groupImage, setGroupImage] = useState<string | null>(null);
 
     const handlePickImage = async () => {
-        // Request permission
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
         if (permissionResult.granted === false) {
-            alert('Permission to access camera roll is required!');
+            alert('Permission to access media library is required!');
             return;
         }
 
@@ -49,18 +50,43 @@ export default function CreateGroupModal({
         }
     };
 
-    const handleCreateGroup = () => {
+    const handleCreateGroup = async () => {
+        const formData = new FormData();
+        formData.append('port.name', groupName);
+        formData.append('imageFile', {
+            uri: groupImage!,
+            type: 'image/jpeg',
+            name: 'portImage.jpg',
+        } as any);
         if (!groupName.trim()) return;
+        try {
+            const response = await fetch('http://192.168.1.26:8080/create_port-mobile', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            console.log("ress----", response)
+            const result = await response.json();
+            console.log("result----", result)
 
-        // In a real app, you would send this data to your backend
+            if (response.ok) {
+                Alert.alert('Success', result.message);
+            } else {
+                Alert.alert('Error', result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Alert.alert('Error', 'Something went wrong');
+        } finally {
+            setLoading(false);
+        }
         const newGroupId = `group-${Date.now()}`;
-
-        // Reset form and close modal
         setGroupName('');
         setGroupImage(null);
-
-        // Navigate to the new group
         onCreateGroup(newGroupId);
+        onClose();
     };
 
     return (
@@ -73,6 +99,7 @@ export default function CreateGroupModal({
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
+                        {/* Modal Header */}
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Create New Group</Text>
                             <TouchableOpacity onPress={onClose}>
@@ -80,6 +107,7 @@ export default function CreateGroupModal({
                             </TouchableOpacity>
                         </View>
 
+                        {/* Form Section */}
                         <View style={styles.formContainer}>
                             <TouchableOpacity
                                 style={styles.imagePickerContainer}
@@ -109,6 +137,7 @@ export default function CreateGroupModal({
                             </View>
                         </View>
 
+                        {/* Button Row */}
                         <View style={styles.buttonContainer}>
                             <TouchableOpacity
                                 style={styles.cancelButton}
@@ -119,7 +148,7 @@ export default function CreateGroupModal({
                             <TouchableOpacity
                                 style={[
                                     styles.createButton,
-                                    !groupName.trim() && styles.disabledButton
+                                    !groupName.trim() && styles.disabledButton,
                                 ]}
                                 onPress={handleCreateGroup}
                                 disabled={!groupName.trim()}

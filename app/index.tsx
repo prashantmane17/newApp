@@ -69,12 +69,22 @@ export default function LoginScreen() {
                             "Content-Type": "application/json",
                         },
                     });
+                    if (homeResponse.ok) {
+                        const homdata = await homeResponse.json();
+                        console.log("reddddd------", homeResponse);
+                    }
+                    else {
+                        const companyResponse = await fetch(`http://192.168.1.26:8080/company-home_mobile?username=${encodeURIComponent(email)}`, {
+                            method: "GET",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                        });
 
-                    const homdata = await homeResponse.json();
-                    console.log("reddddd------", homdata);
+                    }
                     getSessionDetails();
                     Alert.alert("Sucsess", "Loged in suceessfully!!")
-                    router.replace('/(tabs)');
+                    // router.replace('/(tabs)');
                 }
                 catch (err) {
                     console.log("eroo----", err)

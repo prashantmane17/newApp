@@ -49,7 +49,9 @@ export default function HomeScreen() {
             style={styles.groupItem}
         >
             <Image
-                source={{ uri: item.profile_pic || "http://192.168.1.26:8080/resources/img/Profile/default_group_image.png" }}
+                source={{
+                    uri: item.profile_pic ? `http://192.168.1.26:8080/imageController/${item.profile_pic}.do` : "http://192.168.1.26:8080/resources/img/Profile/default_group_image.png"
+                }}
                 style={styles.groupImage}
             />
             <View style={styles.groupInfo}>
@@ -78,18 +80,6 @@ export default function HomeScreen() {
                     <Feather name="plus" size={16} color="#000" />
                 </TouchableOpacity>
             </View>
-
-            {/* <FlatList
-                data={mockGroups}
-                renderItem={renderGroupItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.list}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>No groups yet. Create your first group!</Text>
-                    </View>
-                }
-            /> */}
             <View>
                 {groupList.map((item: any) => (
                     renderGroupItem(item)
@@ -102,10 +92,8 @@ export default function HomeScreen() {
                 onClose={() => setIsCreateModalVisible(false)}
                 onCreateGroup={(groupId) => {
                     setIsCreateModalVisible(false);
-                    // navigation.navigate('GroupChat', { groupId });
                     router.push({
-                        pathname: '/(tabs)/group/chatScreen',
-                        params: { groupId: groupId }
+                        pathname: '/(tabs)/group',
                     })
                 }
                 }

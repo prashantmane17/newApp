@@ -17,6 +17,7 @@ export default function MessagesScreen() {
             });
 
             const data = await response.json();
+            console.log("llll---", data)
             setMessagesUser(data.friends);
         } catch (error) {
             Alert.alert("Error", "Failed to load contacts.");
@@ -45,7 +46,8 @@ export default function MessagesScreen() {
                 if (status === "Message") {
                     router.push("/(tabs)")
                 }
-                friendsList(sessionData?.loginId);
+
+                friendsList(sessionData?.userId);
             }
             else {
                 console.log("not good")
@@ -57,7 +59,7 @@ export default function MessagesScreen() {
 
     useEffect(() => {
         if (sessionData?.loginId) {
-            friendsList(sessionData.loginId);
+            friendsList(sessionData.userId);
         }
     }, [sessionData]);
 
