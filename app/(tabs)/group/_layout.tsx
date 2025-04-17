@@ -18,6 +18,14 @@ export default function MessagesLayout() {
                     headerBackTitle: 'Back'
                 }}
             />
+            <Stack.Screen
+                name="groupDetails"
+                options={{
+                    title: 'Group Details',
+                    headerShown: false,
+                    headerBackTitle: 'Back'
+                }}
+            />
         </Stack>
     );
 }

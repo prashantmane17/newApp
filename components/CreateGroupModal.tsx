@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
-
+import * as FileSystem from 'expo-file-system';
 interface CreateGroupModalProps {
     visible: boolean;
     onClose: () => void;
@@ -31,6 +31,23 @@ export default function CreateGroupModal({
     const [loading, setLoading] = useState(false);
     const [groupImage, setGroupImage] = useState<string | null>(null);
 
+
+    const convertImageToBase64 = async (uri: string) => {
+        try {
+            const base64 = await FileSystem.readAsStringAsync(uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+
+            // Optional: Add prefix (required by backend to detect MIME type)
+            const ext = uri.split('.').pop(); // jpg, png, etc.
+            const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+            return `data:${mimeType};base64,${base64}`;
+        } catch (error) {
+            console.error('Error converting image to base64:', error);
+            return null;
+        }
+    };
     const handlePickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -52,24 +69,25 @@ export default function CreateGroupModal({
     };
 
     const handleCreateGroup = async () => {
-        const formData = new FormData();
-        formData.append('port.name', groupName);
-        formData.append('port.about', groupAbout);
-        formData.append('imageFile', {
-            uri: groupImage!,
-            type: 'image/jpeg',
-            name: 'portImage.jpg',
-        } as any);
         if (!groupName.trim()) return;
         try {
+            console.log("groupImage----", groupImage)
+            if (!groupImage) {
+                throw new Error('No image selected');
+            }
+            const base64Image = await convertImageToBase64(groupImage);
             const response = await fetch('http://192.168.1.26:8080/create_port-mobile', {
                 method: 'POST',
-                body: formData,
+                body: JSON.stringify({
+                    name: groupName,
+                    about: groupAbout,
+                    imageFile: base64Image
+                }),
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'application/json',
                 },
             });
-            console.log("ress----", response)
+            // console.log("ress----", response)
             const result = await response.json();
             console.log("result----", result)
 

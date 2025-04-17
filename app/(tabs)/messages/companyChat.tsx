@@ -2,8 +2,8 @@
 
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useEffect, useState, useMemo, useRef } from "react"
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, KeyboardAvoidingView, Platform, Alert, StatusBar, Image, Keyboard, ActivityIndicator, ToastAndroid } from "react-native"
-import { Send, ArrowLeft, MoreVertical, Download } from "lucide-react-native"
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, KeyboardAvoidingView, Platform, Alert, StatusBar, Image, Keyboard, ActivityIndicator, ToastAndroid, SectionListRenderItem } from "react-native"
+import { Send, ArrowLeft, MoreVertical, Download, ArrowUp } from "lucide-react-native"
 import { useSession } from "@/context/ContextSession"
 import moment from "moment"
 import * as MediaLibrary from "expo-media-library"
@@ -17,9 +17,24 @@ export default function ChatScreen() {
     const [messages, setMessages] = useState<any>([])
     const [images, setImages] = useState<any>([])
     const [userData, setUserData] = useState<any>(null)
-    const sectionListRef = useRef<SectionList>(null)
     const [isKeyboardVisible, setKeyboardVisible] = useState(false)
     const [downloadingImages, setDownloadingImages] = useState<{ [key: string]: boolean }>({})
+    const [showScrollTop, setShowScrollTop] = useState(false)
+    const sectionListRef = useRef<SectionList>(null)
+
+    const handleScroll = (event: any) => {
+        const offsetY = event.nativeEvent.contentOffset.y;
+        // Show button if scrolled more than 300 pixels
+        setShowScrollTop(offsetY > 300);
+    };
+
+    const scrollToTop = () => {
+        sectionListRef.current?.scrollToLocation({
+            sectionIndex: 0,
+            itemIndex: 0,
+            animated: true,
+        });
+    };
 
     const friendsList = async () => {
         try {
@@ -89,25 +104,6 @@ export default function ChatScreen() {
             setDownloadingImages((prev) => ({ ...prev, [imageName]: false }))
         }
     }
-    // const sendMessage = () => {
-    //     if (message.trim()) {
-    //         const newMessage = {
-    //             post: {
-    //                 id: messages.length + 1,
-    //                 postDescription: message,
-    //                 postedBy: { id: sessionData?.loginId },
-    //                 date: moment().format("DD MMM YYYY [at] HH:mm"),
-    //             },
-    //             postedBy: {
-    //                 id: sessionData?.loginId,
-    //                 fullName: sessionData?.name,
-    //             }
-    //         }
-    //         setMessages([...messages, newMessage])
-    //         setMessage("")
-    //     }
-    // }
-
 
     const formatMessageDate = (dateString: string) => {
         const date = moment(dateString, ["DD MMM YYYY ", "YYYY-MM-DD"])
@@ -138,10 +134,28 @@ export default function ChatScreen() {
         } else {
             throw new Error('Unsupported time unit');
         }
-
         const dateTime = moment().subtract(value, unit);
         return dateTime.format('YYYY-MM-DD HH:mm:ss');
     };
+    const yesterdayDate = (input: string): string => {
+        if (!input.includes("Yesterday")) return "hi";
+
+        const timePart = input.replace("Yesterday at", "").trim(); // e.g., "13:48"
+        const [hourStr, minuteStr] = timePart.split(":");
+
+        const hour = parseInt(hourStr, 10);
+        const minute = parseInt(minuteStr, 10);
+
+        const now = new Date();
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        yesterday.setHours(hour, minute, 0, 0);
+        // Format as YYYY-MM-DD HH:mm:ss
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        return `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())} ${pad(yesterday.getHours())}:${pad(yesterday.getMinutes())}:${pad(yesterday.getSeconds())}`;
+    };
+
+
     const messagesByDate = useMemo(() => {
         if (messages.length === 0) return []
 
@@ -149,10 +163,20 @@ export default function ChatScreen() {
 
         messages.forEach((msg: any) => {
             // Parse the date consistently whether it's relative or absolute
-            if (msg.post?.date.includes('ago')) {
-                msg.post.date = convertAgoToDate(msg.post.date)
+            if (!msg.post?.date) return; // Skip messages without dates
+
+
+            // Parse the date consistently whether it's relative or absolute
+            if (msg.post.date.includes('Yesterday')) {
+                msg.post.date = yesterdayDate(msg.post.date)
             }
-            const msgDate = moment(msg.post?.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
+            else if (typeof msg.post.date === 'string') {
+                if (msg.post.date.includes('ago'))
+                    msg.post.date = convertAgoToDate(msg.post.date)
+            }
+
+
+            const msgDate = moment(msg.post.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
             const dateKey = msgDate.format("YYYY-MM-DD")
             if (!groupedMessages[dateKey]) {
                 groupedMessages[dateKey] = []
@@ -189,10 +213,24 @@ export default function ChatScreen() {
     }
 
     const HtmlRenderer = (cleanedHtml: string) => {
-        const lines = cleanedHtml.split("/n")?.map((line: any, index: number) => <Text key={index}>{line}</Text>)
+        const [expanded, setExpanded] = useState(false);
+        const text = cleanedHtml.replace(/\/n/g, ' ');
+        const shouldShowReadMore = text.length > 450;
+        const displayText = expanded ? text : text.slice(0, 450);
 
-        return <View>{lines}</View>
-    }
+        return (
+            <View>
+                <Text style={styles.messageText}>{displayText}</Text>
+                {shouldShowReadMore && (
+                    <TouchableOpacity onPress={() => setExpanded(!expanded)}>
+                        <Text style={styles.readMoreText}>
+                            {expanded ? 'Read Less' : 'Read More'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+        );
+    };
 
     const EmptyChat = () => (
         <View style={styles.emptyContainer}>
@@ -220,44 +258,27 @@ export default function ChatScreen() {
             </View>
         )
     }
-    const scrollToLatest = () => {
-        if (sectionListRef.current && messagesByDate.length > 0) {
-            const lastSectionIndex = messagesByDate.length - 1
-            const lastItemIndex = messagesByDate[lastSectionIndex].data.length - 1
-            sectionListRef.current.scrollToLocation({
-                sectionIndex: lastSectionIndex,
-                itemIndex: lastItemIndex,
-                animated: true
-            })
-        }
-    }
 
-    // Update sendMessage to scroll after sending
     const sendMessage = async () => {
         if (message.trim()) {
             try {
-                console.log("id----", id)
-                const formData = new FormData();
-                formData.append('post.postDescription', message);
-                formData.append('post.postedOn', id as string);
-                formData.append('post.description', '');
-                formData.append('post.counterName', '');
-                formData.append('post.imgName', '');
-
-                const emptyImageBlob = new Blob([], { type: 'image/jpeg' });
-                const emptyVideoBlob = new Blob([], { type: 'video/mp4' });
-                const emptyFileBlob = new Blob([], { type: 'application/pdf' });
-
-                formData.append('postImages', new Blob([], { type: 'image/jpeg' }));
-                formData.append('postVideos', new Blob([], { type: 'video/mp4' }));
-                formData.append('fileItem', new Blob([], { type: 'application/pdf' }));
-                const response = await fetch('http://192.168.1.26:8080/add-port-post', {
+                const response = await fetch('http://192.168.1.26:8080/add-port-post-mobile', {
                     method: 'POST',
                     credentials: 'include',
-                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        post: {
+                            postDescription: message,
+                            imgName: '',
+                            counterName: '',
+                            description: '',
+                            postedOn: id
+                        }
+                    }),
                 });
 
-                console.log("response----", response)
                 if (response.ok) {
                     const newPost = await response.json();
                     const newMessage = {
@@ -273,9 +294,12 @@ export default function ChatScreen() {
                             fullName: sessionData?.name,
                         }
                     };
-                    setMessages([...messages, newMessage]);
+                    setMessages((prevMessages: any[]) => [...prevMessages, newMessage]);
                     setMessage("");
-                    setTimeout(scrollToLatest, 100);
+                    // Scroll to top after sending message
+                    setTimeout(() => {
+                        scrollToTop();
+                    }, 100);
                 } else {
                     Alert.alert("Error", "Failed to send message");
                 }
@@ -292,6 +316,7 @@ export default function ChatScreen() {
         }
         return moment(date).format("h:mm A")
     }
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#128C7E" />
@@ -303,14 +328,25 @@ export default function ChatScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.userInfo}>
-                    {userData?.avatar ? (
-                        <Image source={{ uri: userData.avatar }} style={styles.avatar} />
-                    ) : (
-                        <View style={styles.avatarPlaceholder}>
-                            <Text style={styles.avatarText}>{userData?.name?.charAt(0) || "U"}</Text>
-                        </View>
-                    )}
-                    <Text style={styles.userName}>{userData?.name || "User"}</Text>
+                    <TouchableOpacity
+                        style={styles.userInfoTouchable}
+                        onPress={() => router.push({
+                            pathname: '/group/groupDetails',
+                            params: {
+                                groupName: userData?.name || "User",
+                                groupImage: userData?.avatar || null
+                            }
+                        })}
+                    >
+                        {userData?.avatar ? (
+                            <Image source={{ uri: userData.avatar }} style={styles.avatar} />
+                        ) : (
+                            <View style={styles.avatarPlaceholder}>
+                                <Text style={styles.avatarText}>{userData?.name?.charAt(0) || "U"}</Text>
+                            </View>
+                        )}
+                        <Text style={styles.userName}>{userData?.name || "User"}</Text>
+                    </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity style={styles.moreButton} activeOpacity={0.7}>
@@ -349,25 +385,25 @@ export default function ChatScreen() {
                         ref={sectionListRef}
                         sections={messagesByDate}
                         keyExtractor={(item) => item.post?.id?.toString()}
-                        renderItem={({ item }) => (
-                            <View
-                                style={[
-                                    styles.messageBubble,
-                                    sessionData?.loginId === item.post?.postedBy ? styles.sentMessage : styles.receivedMessage,
-                                ]}
-                            >
-                                <Text style={styles.messagerName}>{item.postedBy.fullName}</Text>
-                                {item.post?.images && (
-                                    <ImageWithDownload
-                                        imageUrl={`http://192.168.1.26:8080/imageController/${item.post?.images?.imageNames}.do`}
-                                        imageName={item.post?.images?.imageNames}
-                                    />
-                                )}
-                                <Text style={styles.messageText}>{HtmlRenderer(cleanHtml(item.post.postDescription || "--"))}</Text>
-                                <Text style={styles.timeText}>{FormateDate(item.post?.date)}</Text>
-                            </View>
-                        )}
-
+                        renderItem={({ item }) => {
+                            return (
+                                <View
+                                    style={[
+                                        styles.messageBubble, styles.receivedMessage,
+                                        // sessionData?.loginId === item.post?.postedBy ? styles.sentMessage : styles.receivedMessage,
+                                    ]}
+                                >
+                                    <Text style={styles.messagerName}>{item.postedBy.fullName}</Text>
+                                    {item.post?.images && (
+                                        <ImageWithDownload
+                                            imageUrl={`http://192.168.1.26:8080/imageController/${item.post?.images?.imageNames}.do`}
+                                            imageName={item.post?.images?.imageNames} />
+                                    )}
+                                    <Text style={styles.messageText}>{HtmlRenderer(cleanHtml(item.post.postDescription || "--"))}</Text>
+                                    <Text style={styles.timeText}>{FormateDate(item.post?.date)}</Text>
+                                </View>
+                            )
+                        }}
                         renderSectionHeader={({ section: { title } }) => (
                             <View style={styles.dateSeparator}>
                                 <Text style={styles.dateText}>{title}</Text>
@@ -376,14 +412,22 @@ export default function ChatScreen() {
                         stickySectionHeadersEnabled={true}
                         contentContainerStyle={styles.listContent}
                         inverted={false}
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
                     />
-
                 ) : (
                     <EmptyChat />
                 )}
-
-
             </KeyboardAvoidingView>
+            {showScrollTop && (
+                <TouchableOpacity
+                    style={styles.scrollTopButton}
+                    onPress={scrollToTop}
+                    activeOpacity={0.7}
+                >
+                    <ArrowUp color="#FFFFFF" size={24} />
+                </TouchableOpacity>
+            )}
         </View>
     )
 }
@@ -518,7 +562,7 @@ const styles = StyleSheet.create({
     },
     messageText: {
         fontSize: 16,
-        color: "#303030",
+        color: '#303030',
         lineHeight: 22,
     },
     timeText: {
@@ -584,5 +628,30 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "#7D7D7D",
         textAlign: "center",
+    },
+    scrollTopButton: {
+        position: 'absolute',
+        right: 20,
+        bottom: 100,
+        backgroundColor: '#128C7E',
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    readMoreText: {
+        color: '#6366f1',
+        fontSize: 14,
+        marginTop: 4,
+    },
+    userInfoTouchable: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 })

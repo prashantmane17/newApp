@@ -41,6 +41,9 @@ export default function HomeScreen() {
     }, [sessionData])
 
     const handleGroupPress = async (groupId: string, status: string) => {
+        if (status == "admin") {
+            return;
+        }
         setIsLoading(true)
         console.log(status, "groupId----", groupId)
         try {
@@ -80,7 +83,7 @@ export default function HomeScreen() {
                 <View style={styles.groupHeader}>
                     <Text style={styles.groupName}>{item.name}</Text>
                     <TouchableOpacity onPress={() => handleGroupPress(item.id, item.status)}>
-                        <Text style={styles.timeText}>{item.status === "message" ? "Add" : "Remove"}</Text>
+                        <Text style={styles.timeText}>{item.status === "message" ? "Add" : item.status === "admin" ? "Admin" : "Remove"}</Text>
                     </TouchableOpacity>
                 </View>
 
