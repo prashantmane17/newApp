@@ -27,6 +27,7 @@ export default function CreateGroupModal({
     onCreateGroup,
 }: CreateGroupModalProps) {
     const [groupName, setGroupName] = useState('');
+    const [groupAbout, setGroupAbout] = useState('');
     const [loading, setLoading] = useState(false);
     const [groupImage, setGroupImage] = useState<string | null>(null);
 
@@ -53,6 +54,7 @@ export default function CreateGroupModal({
     const handleCreateGroup = async () => {
         const formData = new FormData();
         formData.append('port.name', groupName);
+        formData.append('port.about', groupAbout);
         formData.append('imageFile', {
             uri: groupImage!,
             type: 'image/jpeg',
@@ -84,6 +86,7 @@ export default function CreateGroupModal({
         }
         const newGroupId = `group-${Date.now()}`;
         setGroupName('');
+        setGroupAbout('');
         setGroupImage(null);
         onCreateGroup(newGroupId);
         onClose();
@@ -132,6 +135,16 @@ export default function CreateGroupModal({
                                     value={groupName}
                                     onChangeText={setGroupName}
                                     placeholder="Enter group name"
+                                    placeholderTextColor="#9ca3af"
+                                />
+                            </View>
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>About Group </Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={groupAbout}
+                                    onChangeText={setGroupAbout}
+                                    placeholder="Enter group about"
                                     placeholderTextColor="#9ca3af"
                                 />
                             </View>

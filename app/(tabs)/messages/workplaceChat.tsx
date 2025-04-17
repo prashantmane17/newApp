@@ -29,20 +29,26 @@ export default function ChatScreen() {
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const friendsList = async () => {
         try {
-            const response = await fetch(`http://192.168.1.26:8080/mobile-post.employee.fetch-public-post?companyId=${companyId}&empId=${empId}&page=0`, {
+            let url = ""
+            if (sessionData?.role === "Superadmin") {
+                url = `http://192.168.1.26:8080/owner.post.fetch-public-post-mobile?&page=0`
+            }
+            else {
+                url = `http://192.168.1.26:8080/mobile-post.employee.fetch-public-post?companyId=${companyId}&empId=${empId}&page=0`
+            }
+            const response = await fetch(url, {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
             })
             if (response.ok) {
                 if (response.status === 204) {
-
                 }
                 else {
                     const data = await response.json()
                     // const userMessage = data.posts?.map((user: any) => user.postedUserInfo)
-                    // console.log("daaa----", userMessage)
                     // setMessageUser(userMessage || [])
+                    console.log("data----", data.posts[0].postedUserInfo)
                     setUserData({ name: name || "User", avatar: null })
                     setMessages(data.posts || []);
                 }
@@ -105,7 +111,6 @@ export default function ChatScreen() {
             .replace(/(\s*\n\s*)+/g, " ");
     };
     const HtmlRenderer = (cleanedHtml: string) => {
-        console.log("cleanedHtml------------", cleanedHtml)
         const lines = cleanedHtml.split('/n')?.map((line: any, index: number) => (
             <Text key={index}>{line}</Text>
         ));

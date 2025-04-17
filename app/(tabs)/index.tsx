@@ -43,7 +43,7 @@ export default function ChatInterface() {
         team: extractLastMessage(data.teamList),
         company: extractLastMessage(data.workingCompany)
       });
-      console.log("data----", data.branchList)
+      // console.log("data----", data.branchList)
       setMessages({
         user: data.friendList || data.superadminList,
         team: data.teamList,
@@ -84,8 +84,8 @@ export default function ChatInterface() {
           <View style={styles.headerInfo}>
             <Text style={styles.headerSubtitle}>Messages & Groups</Text>
           </View>
-          <TouchableOpacity onPress={() => handleLogout()}>
-            <Outdent size={20} color='#fff' />
+          <TouchableOpacity onPress={() => handleLogout()} >
+            <LogOut size={20} color='red' />
           </TouchableOpacity>
 
         </View>
@@ -122,8 +122,8 @@ export default function ChatInterface() {
             messages.team?.map((user: any, index: number) => (
               <TouchableOpacity key={user.userId} style={styles.chatPreview}
                 onPress={() => router.push({
-                  pathname: '/messages/teamChat',
-                  params: { id: user.userId }
+                  pathname: '/messages/chat',
+                  params: { id: user.id, name: user.name }
                 })}>
                 <Image
                   source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
@@ -140,7 +140,15 @@ export default function ChatInterface() {
               </TouchableOpacity>
             ))
           )}
-
+          {sessionData?.role === "Superadmin" && (
+            <TouchableOpacity style={styles.navItem} onPress={() => router.push({
+              pathname: '/messages/workplaceChat',
+              params: { id: companyTeam?.portId || 111, name: sessionData?.companyName || "User" }
+            })}>
+              <Building color="#fff" size={24} />
+              <Text style={styles.navText}>Workplace</Text>
+            </TouchableOpacity>
+          )}
 
           {/* <TouchableOpacity onPress={() => router.push("/(tabs)/payslip")}> */}
           <TouchableOpacity onPress={() => router.push("/(tabs)/messages")}>
@@ -217,10 +225,12 @@ export default function ChatInterface() {
               </View>
             </TouchableOpacity>
           ))}
-          <View style={styles.navItem}>
-            <Building color="#fff" size={24} />
-            <Text style={styles.navText}>Workplace</Text>
-          </View>
+          {sessionData?.role !== "Superadmin" && (
+            <View style={styles.navItem}>
+              <Building color="#fff" size={24} />
+              <Text style={styles.navText}>Workplace</Text>
+            </View>
+          )}
           {messages.company?.map((user: any, index: number) => (
             <TouchableOpacity key={user.userId} style={styles.chatPreview}
               onPress={() => router.push({

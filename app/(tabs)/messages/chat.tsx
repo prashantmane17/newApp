@@ -1,6 +1,3 @@
-
-
-
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useEffect, useState, useMemo, useRef } from "react"
 import {
@@ -34,10 +31,36 @@ export default function ChatScreen() {
     const [channelId, setChannelId] = useState("")
     const [message, setMessage] = useState("")
     const [isLoading, setIsLoading] = useState(false)
-    const sectionListRef = useRef<SectionList<any>>(null);
+    const sectionListRef = useRef<SectionList>(null);
     const [messages, setMessages] = useState<any>([])
     const [userData, setUserData] = useState<any>(null)
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+    const scrollToBottom = () => {
+        if (sectionListRef.current && messagesByDate.length > 0) {
+            const lastSectionIndex = messagesByDate.length - 1;
+            const lastItemIndex = messagesByDate[lastSectionIndex].data.length - 1;
+            sectionListRef.current.scrollToLocation({
+                sectionIndex: lastSectionIndex,
+                itemIndex: lastItemIndex,
+                animated: true,
+                viewPosition: 1
+            });
+        }
+    };
+
+    const getItemLayout = (data: any, index: number) => ({
+        length: 100,
+        offset: 100 * index,
+        index,
+    });
+
+    useEffect(() => {
+        if (messages.length > 0) {
+            scrollToBottom();
+        }
+    }, [messages]);
+
     const friendsList = async () => {
         setIsLoading(true);
         try {
@@ -58,18 +81,25 @@ export default function ChatScreen() {
                 },
             });
             const data = await response.json()
-            console.log("dhuu----", data);
-            const userMessage = data.friendList || data.superadminList.find((user: any) => id === user.id)
-            const branchMessage = data.branchList.find((branch: any) => id === branch.id)
+            let userMessage = null;
+            if (sessionData?.role === "Superadmin") {
+                userMessage = data.superadminList.find((branch: any) => id === branch.id)
+                console.log("data----", userMessage)
+            }
+            else {
+                userMessage = data.friendList.find((user: any) => id === user.id)
+            }
+            let branchMessage = null
+            if (sessionData?.role === "Superadmin") {
+                branchMessage = data.branchList.find((branch: any) => id === branch.id)
+            }
             const chatdata = await chatResponse.json();
-            console.log("data----", chatdata);
-            console.log("ress----", chatdata.chatChannelList[0].uuid)
             setChannelId(chatdata.chatChannelList[0].uuid);
             setUserData(userMessage || branchMessage || name || { name: "User", avatar: null })
             setMessages(userMessage?.message || branchMessage?.message || [])
         } catch (error) {
             setIsLoading(false);
-            Alert.alert("Error", "Failed to fetch messages.")
+            // Alert.alert("Error", "Failed to fetch messages.")
         }
         finally {
             setIsLoading(false);
@@ -125,11 +155,10 @@ export default function ChatScreen() {
                 fromUserProfilePic: null,
                 toUserId: id as string,
                 type: 'private'
-
             };
             sendSocketMessage(channelId, newMessage, sessionData?.loginId);
-
             setMessage("");
+            setTimeout(scrollToBottom, 100);
         }
     };
 
@@ -195,7 +224,7 @@ export default function ChatScreen() {
                         <Image source={{ uri: userData.avatar }} style={styles.avatar} />
                     ) : (
                         <View style={styles.avatarPlaceholder}>
-                            <Text style={styles.avatarText}>{userData?.name?.charAt(0) || name?.charAt(0) || "U"}</Text>
+                            <Text style={styles.avatarText}>{userData?.name?.charAt(0) || (typeof name === 'string' ? name.charAt(0) : "U")}</Text>
                         </View>
                     )}
                     <Text style={styles.userName}>{userData?.name || name || "User"}</Text>
@@ -219,6 +248,7 @@ export default function ChatScreen() {
                         ref={sectionListRef}
                         sections={messagesByDate}
                         keyExtractor={(item) => item.id.toString()}
+                        getItemLayout={getItemLayout}
                         renderItem={({ item }) => (
                             <View
                                 style={[

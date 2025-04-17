@@ -155,7 +155,6 @@ export default function ChatScreen() {
             const msgDate = moment(msg.post?.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
             const dateKey = msgDate.format("YYYY-MM-DD")
             if (!groupedMessages[dateKey]) {
-                console.log("dateKey----", dateKey)
                 groupedMessages[dateKey] = []
             }
             groupedMessages[dateKey].push(msg)
@@ -234,26 +233,58 @@ export default function ChatScreen() {
     }
 
     // Update sendMessage to scroll after sending
-    const sendMessage = () => {
+    const sendMessage = async () => {
         if (message.trim()) {
-            const newMessage = {
-                post: {
-                    id: messages.length + 1,
-                    postDescription: message,
-                    postedBy: { id: sessionData?.loginId },
-                    date: moment().format("DD MMM YYYY [at] HH:mm"),
-                },
-                postedBy: {
-                    id: sessionData?.loginId,
-                    fullName: sessionData?.name,
+            try {
+                console.log("id----", id)
+                const formData = new FormData();
+                formData.append('post.postDescription', message);
+                formData.append('post.postedOn', id as string);
+                formData.append('post.description', '');
+                formData.append('post.counterName', '');
+                formData.append('post.imgName', '');
+
+                const emptyImageBlob = new Blob([], { type: 'image/jpeg' });
+                const emptyVideoBlob = new Blob([], { type: 'video/mp4' });
+                const emptyFileBlob = new Blob([], { type: 'application/pdf' });
+
+                formData.append('postImages', new Blob([], { type: 'image/jpeg' }));
+                formData.append('postVideos', new Blob([], { type: 'video/mp4' }));
+                formData.append('fileItem', new Blob([], { type: 'application/pdf' }));
+                const response = await fetch('http://192.168.1.26:8080/add-port-post', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData,
+                });
+
+                console.log("response----", response)
+                if (response.ok) {
+                    const newPost = await response.json();
+                    const newMessage = {
+                        post: {
+                            id: newPost.id,
+                            postDescription: newPost.postDescription,
+                            postedBy: { id: sessionData?.loginId },
+                            date: moment().format("DD MMM YYYY [at] HH:mm"),
+                            images: newPost.images
+                        },
+                        postedBy: {
+                            id: sessionData?.loginId,
+                            fullName: sessionData?.name,
+                        }
+                    };
+                    setMessages([...messages, newMessage]);
+                    setMessage("");
+                    setTimeout(scrollToLatest, 100);
+                } else {
+                    Alert.alert("Error", "Failed to send message");
                 }
+            } catch (error) {
+                console.error("Error sending message:", error);
+                Alert.alert("Error", "Failed to send message");
             }
-            setMessages([...messages, newMessage])
-            setMessage("")
-            // Scroll to latest message after state update
-            setTimeout(scrollToLatest, 100)
         }
-    }
+    };
     const FormateDate = (date: string) => {
         if (date.includes('at')) {
             const timePart = date.split("at")[1].trim()
