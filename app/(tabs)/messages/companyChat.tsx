@@ -269,15 +269,14 @@ export default function ChatScreen() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        post: {
-                            postDescription: message,
-                            imgName: '',
-                            counterName: '',
-                            description: '',
-                            postedOn: id
-                        }
+                        postDescription: message,
+                        imgName: '',
+                        counterName: '',
+                        description: '',
+                        postedOn: id
                     }),
                 });
+                console.log("response----", response)
 
                 if (response.ok) {
                     const newPost = await response.json();
