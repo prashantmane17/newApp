@@ -9,6 +9,7 @@ import {
     SafeAreaView,
     StatusBar,
     Alert,
+    ScrollView,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import CreateGroupModal from '@/components/CreateGroupModal';
@@ -109,12 +110,12 @@ export default function HomeScreen() {
                     <Feather name="plus" size={16} color="#000" />
                 </TouchableOpacity>
             </View>
-            <View>
+            <ScrollView>
                 {groupList.map((item: any) => (
                     renderGroupItem(item)
 
                 ))}
-            </View>
+            </ScrollView>
 
             <CreateGroupModal
                 visible={isCreateModalVisible}
@@ -187,6 +188,7 @@ const styles = StyleSheet.create({
         height: 50,
         borderRadius: 25,
         marginRight: 16,
+        objectFit: "contain"
     },
     groupInfo: {
         flex: 1,

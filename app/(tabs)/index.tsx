@@ -7,6 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSession } from '@/context/ContextSession';
 import moment from "moment"
 import { ActivityIndicator } from 'react-native';
+import { ChatMessage, connectSocket, subscribeToNotifications } from '@/hooks/sockets/socketService';
 
 
 export default function ChatInterface() {
@@ -43,7 +44,7 @@ export default function ChatInterface() {
         team: extractLastMessage(data.teamList),
         company: extractLastMessage(data.workingCompany)
       });
-      // console.log("data----", data.branchList)
+      console.log("kdata----", data.superadminList)
       setMessages({
         user: data.friendList || data.superadminList,
         team: data.teamList,
@@ -60,6 +61,21 @@ export default function ChatInterface() {
   useFocusEffect(
     useCallback(() => {
       friendsList();
+      connectSocket(sessionData?.loginId, sessionData?.loginId, (newMessage: ChatMessage) => {
+        console.log("newMessage----", newMessage)
+      }, (notification: any) => {
+        // friendsList();
+        // console.log("notification----", notification)
+        const user = messages.user.find((user: any) => user.id === notification.fromUserId);
+        if (user) {
+          console.log("user----", user.message[user.message.length - 1])
+          user.numberOfUnSeenMessage = Number(user.numberOfUnSeenMessage) + 1;
+          user.message.push(notification);
+          setMessages({ ...messages, user: user });
+
+        }
+
+      });
     }, [sessionData]));
 
 
@@ -163,10 +179,10 @@ export default function ChatInterface() {
               <TouchableOpacity key={branch.userId} style={styles.chatPreview}
                 onPress={() => router.push({
                   pathname: '/messages/chat',
-                  params: { id: branch.id, name: branch.name + " (" + branch.branch + ")" }
+                  params: { id: branch.id, name: branch.name + " (" + branch.branch + ")", avatar: branch?.profile_pic ? `http://192.168.1.26:8080/imageController/${branch?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_company_image.png' }
                 })}>
                 <Image
-                  source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_company_image.png' }}
+                  source={{ uri: branch?.profile_pic ? `http://192.168.1.26:8080/imageController/${branch?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_company_image.png' }}
                   style={styles.avatar}
                 />
                 <View style={styles.chatInfo}>
@@ -184,19 +200,19 @@ export default function ChatInterface() {
             <TouchableOpacity key={user.userId} style={styles.chatPreview}
               onPress={() => router.push({
                 pathname: '/messages/chat',
-                params: { id: user.id, name: user.name }
+                params: { id: user.id, name: user.name, avatar: user?.profile_pic ? `http://192.168.1.26:8080/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }
               })}>
               <Image
-                source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
+                source={{ uri: user?.profile_pic ? `http://192.168.1.26:8080/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
                 style={styles.avatar}
               />
               <View style={styles.chatInfo}>
                 <Text style={styles.chatName}>{user.name}</Text>
                 <Text numberOfLines={1} ellipsizeMode="tail" style={styles.chatMessage}>{lastMessage.user[index] === "--" ? '' : lastMessage.user[index].contents}</Text>
               </View>
-              <View >
-                <Text style={styles.timestamp}>{lastMessage.user[index] === "--" ? '' : formatMessageDate(lastMessage.user[index].timeSent)}{"  "}</Text>
-                <Text style={styles.timestamp}>{lastMessage.user[index] === "--" ? '' : formatTime(lastMessage.user[index].timeSent)}</Text>
+              <View style={{ flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                <Text style={styles.timestamp}>{lastMessage.user[index] === "--" ? '' : formatMessageDate(lastMessage.user[index].timeSent)}{"  "}{formatTime(lastMessage.user[index].timeSent)}</Text>
+                {user?.numberOfUnSeenMessage > 0 && <Text style={styles.unseenMessage}>{user?.numberOfUnSeenMessage}</Text>}
               </View>
             </TouchableOpacity>
           ))}
@@ -214,10 +230,10 @@ export default function ChatInterface() {
             <TouchableOpacity key={user.id} style={styles.chatPreview}
               onPress={() => router.push({
                 pathname: '/messages/companyChat',
-                params: { id: user?.id || 111, name: user?.name || "User" }
+                params: { id: user?.id || 111, name: user?.name || "User", avatar: user?.profile_pic ? `http://192.168.1.26:8080/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_group_image.png' }
               })}>
               <Image
-                source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_group_image.png' }}
+                source={{ uri: user?.profile_pic ? `http://192.168.1.26:8080/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_group_image.png' }}
                 style={styles.avatar}
               />
               <View style={styles.chatInfo}>
@@ -427,6 +443,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    objectFit: "cover"
   },
   chatInfo: {
     flex: 1,
@@ -451,6 +468,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     opacity: 0.7,
+  },
+  unseenMessage: {
+    color: '#fff',
+    fontSize: 12,
+    backgroundColor: '#008374',
+    padding: 2,
+    borderRadius: 25,
+    marginLeft: 5,
+    fontWeight: 'bold',
+    width: 20,
+
+    height: 20,
+    textAlign: 'center',
+    alignItems: 'flex-end',
   },
   groupItem: {
     flexDirection: 'row',

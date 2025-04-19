@@ -24,7 +24,7 @@ import { subscribeToNotifications } from '@/hooks/sockets/socketService'; // adj
 
 
 export default function ChatScreen() {
-    const { id, name } = useLocalSearchParams()
+    const { id, name, avatar } = useLocalSearchParams()
     const router = useRouter()
     const { sessionData } = useSession()
     console.log(name, "id----", id)
@@ -111,7 +111,7 @@ export default function ChatScreen() {
         friendsList();
         if (channelId) {
 
-            connectSocket(channelId, (newMessage: ChatMessage) => {
+            connectSocket(channelId, sessionData?.loginId, (newMessage: ChatMessage) => {
                 setMessages((prevMessages: any) => [
                     ...prevMessages,
                     {
@@ -121,12 +121,10 @@ export default function ChatScreen() {
                         timeSent: newMessage.dateAndTime,
                     },
                 ]);
-                subscribeToNotifications(sessionData?.loginId, (notification: any) => {
-                    Alert.alert(`🔔 New Notification: ${notification.contents}`);
-                });
-                // console.log("newMessage----", newMessage)
+            }, (notification: any) => {
+                console.log("notification----", notification)
+                Alert.alert(`🔔 New Notification: ${notification.contents}`);
             });
-
         }
     }, [id, channelId]);
 
@@ -220,13 +218,9 @@ export default function ChatScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.userInfo}>
-                    {userData?.avatar ? (
-                        <Image source={{ uri: userData.avatar }} style={styles.avatar} />
-                    ) : (
-                        <View style={styles.avatarPlaceholder}>
-                            <Text style={styles.avatarText}>{userData?.name?.charAt(0) || (typeof name === 'string' ? name.charAt(0) : "U")}</Text>
-                        </View>
-                    )}
+
+                    <Image source={{ uri: avatar as string }} style={styles.avatar} />
+
                     <Text style={styles.userName}>{userData?.name || name || "User"}</Text>
                 </View>
 

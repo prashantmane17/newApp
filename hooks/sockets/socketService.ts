@@ -20,31 +20,29 @@ export interface ChatMessage {
 }
 
 type MessageCallback = (msg: ChatMessage) => void;
+type NotificationCallback = (notification: any) => void;
 
 let stompClient: Client | null = null;
 
 
-export const connectSocket = (channelId: string, onMessageReceived: MessageCallback): void => {
+export const connectSocket = (channelId: string, userId: string, onMessageReceived: MessageCallback, onNotificationReceived: NotificationCallback): void => {
     const socket = new SockJS('http://192.168.1.26:8080/ws');
 
     stompClient = new Client({
         webSocketFactory: () => socket as WebSocket,
-        connectHeaders: {
-            login: 'crm@vivo.com',
-            passcode: '123456789',
-            'accept-version': '1.1,1.0',
-            'heart-beat': '10000,10000'
-        },
+
         debug: (str: string) => console.log(str),
         reconnectDelay: 5000,
         onConnect: () => {
             console.log('✅ Connected to WebSocket');
-
             const topic = `/topic/${channelId}.private.chat`;
             stompClient?.subscribe(topic, (message: IMessage) => {
                 const body: ChatMessage = JSON.parse(message.body);
                 console.log('📩 Message received:');
                 onMessageReceived(body);
+            });
+            subscribeToNotifications(userId, (notification: any) => {
+                onNotificationReceived(notification);
             });
         },
         onStompError: (frame) => {
@@ -65,7 +63,7 @@ export const subscribeToNotifications = (userId: string, onNotificationReceived:
     const topic = `/topic/user.notification.${userId}`;
     stompClient.subscribe(topic, (message: IMessage) => {
         const notification = JSON.parse(message.body);
-        console.log('🔔 Notification received:', notification);
+        // console.log('🔔 Notification received:', notification);
         onNotificationReceived(notification);
     });
 };

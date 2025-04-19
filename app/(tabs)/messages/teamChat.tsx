@@ -62,7 +62,7 @@ export default function ChatScreen() {
         friendsList();
         if (channelId) {
 
-            connectSocket(channelId, (newMessage: ChatMessage) => {
+            connectSocket(channelId, sessionData?.loginId, (newMessage: ChatMessage) => {
                 setMessages((prevMessages: any) => [
                     ...prevMessages,
                     {
@@ -72,12 +72,10 @@ export default function ChatScreen() {
                         timeSent: newMessage.dateAndTime,
                     },
                 ]);
-                subscribeToNotifications(sessionData?.loginId, (notification: any) => {
-                    Alert.alert(`🔔 New Notification: ${notification.contents}`);
-                });
-                // console.log("newMessage----", newMessage)
+            }, (notification: any) => {
+                console.log("notification----", notification)
+                Alert.alert(`🔔 New Notification: ${notification.contents}`);
             });
-
         }
     }, [id, channelId]);
 
@@ -113,20 +111,7 @@ export default function ChatScreen() {
             setMessage("");
         }
     };
-    const sendMessage = () => {
-        if (message.trim()) {
-            setMessages([
-                ...messages,
-                {
-                    id: messages.length + 1,
-                    contents: message,
-                    authorUser: { id: sessionData?.loginId },
-                    timeSent: new Date().toISOString(),
-                },
-            ])
-            setMessage("")
-        }
-    }
+    
 
     const formatMessageDate = (dateString: string) => {
         const date = moment(dateString)

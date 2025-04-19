@@ -10,7 +10,7 @@ import * as MediaLibrary from "expo-media-library"
 import * as FileSystem from "expo-file-system"
 
 export default function ChatScreen() {
-    const { id, name } = useLocalSearchParams()
+    const { id, name, avatar } = useLocalSearchParams()
     const router = useRouter()
     const { sessionData } = useSession()
     const [message, setMessage] = useState("")
@@ -49,7 +49,6 @@ export default function ChatScreen() {
                 } else {
                     const data = await response.json()
                     const userMessage = data.getAllPostOfPort?.map((user: any) => user.post.images)
-                    // console.log("dtata----", data.getAllPostOfPort)
                     setUserData({ name: name || "User", avatar: null })
                     setImages(userMessage)
                     setMessages(data.getAllPostOfPort || [])
@@ -280,6 +279,7 @@ export default function ChatScreen() {
 
                 if (response.ok) {
                     const newPost = await response.json();
+                    console.log("newPost----", newPost)
                     const newMessage = {
                         post: {
                             id: newPost.id,
@@ -337,13 +337,9 @@ export default function ChatScreen() {
                             }
                         })}
                     >
-                        {userData?.avatar ? (
-                            <Image source={{ uri: userData.avatar }} style={styles.avatar} />
-                        ) : (
-                            <View style={styles.avatarPlaceholder}>
-                                <Text style={styles.avatarText}>{userData?.name?.charAt(0) || "U"}</Text>
-                            </View>
-                        )}
+
+                        <Image source={{ uri: avatar as string }} style={styles.avatar} />
+
                         <Text style={styles.userName}>{userData?.name || "User"}</Text>
                     </TouchableOpacity>
                 </View>
@@ -386,20 +382,28 @@ export default function ChatScreen() {
                         keyExtractor={(item) => item.post?.id?.toString()}
                         renderItem={({ item }) => {
                             return (
-                                <View
-                                    style={[
-                                        styles.messageBubble, styles.receivedMessage,
-                                        // sessionData?.loginId === item.post?.postedBy ? styles.sentMessage : styles.receivedMessage,
-                                    ]}
-                                >
-                                    <Text style={styles.messagerName}>{item.postedBy.fullName}</Text>
-                                    {item.post?.images && (
-                                        <ImageWithDownload
-                                            imageUrl={`http://192.168.1.26:8080/imageController/${item.post?.images?.imageNames}.do`}
-                                            imageName={item.post?.images?.imageNames} />
-                                    )}
-                                    <Text style={styles.messageText}>{HtmlRenderer(cleanHtml(item.post.postDescription || "--"))}</Text>
-                                    <Text style={styles.timeText}>{FormateDate(item.post?.date)}</Text>
+                                <View style={styles.msgContainer}>
+                                    <View>
+                                        <Image source={{
+                                            uri: item.postedBy.profile_pic ? `http://192.168.1.26:8080/imageController/${item.postedBy.profile_pic}.do` : "http://192.168.1.26:8080/resources/img/Profile/default_user_image.png"
+                                        }} style={styles.msgAvatar} />
+                                    </View>
+
+                                    <View
+                                        style={[
+                                            styles.messageBubble, styles.receivedMessage,
+                                            // sessionData?.loginId === item.post?.postedBy ? styles.sentMessage : styles.receivedMessage,
+                                        ]}
+                                    >
+                                        <Text style={styles.messagerName}>{item.postedBy.fullName}</Text>
+                                        {item.post?.images && (
+                                            <ImageWithDownload
+                                                imageUrl={`http://192.168.1.26:8080/imageController/${item.post?.images?.imageNames}.do`}
+                                                imageName={item.post?.images?.imageNames} />
+                                        )}
+                                        <Text style={styles.messageText}>{HtmlRenderer(cleanHtml(item.post.postDescription || "--"))}</Text>
+                                        <Text style={styles.timeText}>{FormateDate(item.post?.date)}</Text>
+                                    </View>
                                 </View>
                             )
                         }}
@@ -522,6 +526,17 @@ const styles = StyleSheet.create({
         padding: 8,
         borderRadius: 8,
         marginVertical: 2,
+    },
+    msgContainer: {
+        flexDirection: "row",
+        alignItems: "flex-end",
+        marginVertical: 2,
+        gap: 10,
+    },
+    msgAvatar: {
+        width: 30,
+        height: 30,
+        borderRadius: 20,
     },
     sentMessage: {
         alignSelf: "flex-end",
