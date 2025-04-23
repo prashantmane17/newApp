@@ -41,7 +41,7 @@ export const SessionProvider = ({ children }: SessionProviderProps) => {
                     router.push('/(tabs)/msgDashboard');
                 }
                 else {
-                    router.replace('/(tabs)');
+                    // router.replace('/(tabs)/login');
                 }
             }
             catch (jsonError) {

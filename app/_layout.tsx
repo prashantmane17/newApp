@@ -39,7 +39,7 @@ export default function RootLayout() {
           // Add a small delay to show the loader
           setTimeout(() => {
             setIsLoading(false);
-          }, 1000);
+          }, 100);
         }
       } catch (error) {
         console.error('Error during initialization:', error);
@@ -57,7 +57,7 @@ export default function RootLayout() {
       if (sessionData?.loginId) {
         router.replace('/(tabs)/msgDashboard');
       } else {
-        router.replace('/(tabs)');
+        // router.replace('/(tabs)/login');
       }
     }
   }, [isInitialized, isLoading, sessionData]);

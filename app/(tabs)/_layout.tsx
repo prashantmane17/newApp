@@ -19,6 +19,7 @@ export default function StackLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ title: 'Home', headerShown: false }} />
+        <Stack.Screen name="login" options={{ title: 'Login', headerShown: false }} />
         <Stack.Screen name="msgDashboard" options={{ title: 'Explore', headerShown: false }} />
       </Stack>
     </SessionProvider >

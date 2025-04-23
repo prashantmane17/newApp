@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,7 +12,9 @@ import {
   Platform,
   ScrollView,
   Modal,
-  ActivityIndicator
+  ActivityIndicator,
+  Keyboard,
+  Dimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,6 +38,33 @@ export default function LoginScreen() {
   const codeInputRefs = useRef<(TextInput | null)[]>(new Array(6).fill(null));
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -387,52 +416,62 @@ export default function LoginScreen() {
     </>
   );
   return (
-    <View style={{ flex: 1, marginTop: 20 }}>
-
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.container}>
-            {currentScreen === 'login' && renderLoginScreen()}
-            {currentScreen === 'forgotPassword' && renderForgotPasswordScreen()}
-            {currentScreen === 'verificationCode' && renderVerificationCodeScreen()}
-            {currentScreen === 'newPassword' && renderNewPasswordScreen()}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* Loading Modal */}
-      <Modal
-        transparent={true}
-        visible={isLoggingIn}
-        animationType="fade"
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <ActivityIndicator size="large" color="#7B68EE" />
-            <Text style={styles.loadingText}>Logging in...</Text>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Success Popup Modal */}
-      <Modal
-        transparent={true}
-        visible={showSuccessPopup}
-        animationType="fade"
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, styles.successModalContent]}>
-            <View style={styles.successIconContainer}>
-              <Text style={styles.successIcon}>✓</Text>
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <View style={{ flex: 1, marginTop: 20 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+        >
+          <ScrollView
+            ref={scrollViewRef}
+            contentContainerStyle={[
+              styles.scrollContainer,
+              keyboardVisible && { paddingBottom: 100 }
+            ]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.container}>
+              {currentScreen === 'login' && renderLoginScreen()}
+              {currentScreen === 'forgotPassword' && renderForgotPasswordScreen()}
+              {currentScreen === 'verificationCode' && renderVerificationCodeScreen()}
+              {currentScreen === 'newPassword' && renderNewPasswordScreen()}
             </View>
-            <Text style={styles.successText}>Logged in successfully</Text>
+          </ScrollView>
+        </KeyboardAvoidingView>
+
+        {/* Loading Modal */}
+        <Modal
+          transparent={true}
+          visible={isLoggingIn}
+          animationType="fade"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <ActivityIndicator size="large" color="#7B68EE" />
+              <Text style={styles.loadingText}>Logging in...</Text>
+            </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+
+        {/* Success Popup Modal */}
+        <Modal
+          transparent={true}
+          visible={showSuccessPopup}
+          animationType="fade"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, styles.successModalContent]}>
+              <View style={styles.successIconContainer}>
+                <Text style={styles.successIcon}>✓</Text>
+              </View>
+              <Text style={styles.successText}>Logged in successfully</Text>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -465,7 +504,9 @@ const ColorfulSpiral = () => (
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: "center", padding: 20
+    justifyContent: "center",
+    padding: 20,
+    minHeight: Dimensions.get('window').height - 40
   },
   container: {
     flex: 1,
