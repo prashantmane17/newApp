@@ -1,12 +1,22 @@
 import { useEffect, useRef } from 'react';
 import { BackHandler, ToastAndroid, Platform } from 'react-native';
+import { usePathname } from 'expo-router';
 
 export const useDoubleTapToExit = (exitHandler: () => void) => {
+    const pathname = usePathname();
     const backPressCount = useRef(0);
     const backPressTimer = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         const backAction = () => {
+            // Check if we're on the login or dashboard screen
+            // console.log("pathname----", pathname);
+            const isLoginOrDashboard = pathname === '/' || pathname === '/msgDashboard';
+
+            if (!isLoginOrDashboard) {
+                return false;
+            }
+
             if (backPressCount.current === 0) {
                 backPressCount.current = 1;
                 if (Platform.OS === 'android') {
@@ -34,5 +44,5 @@ export const useDoubleTapToExit = (exitHandler: () => void) => {
                 clearTimeout(backPressTimer.current);
             }
         };
-    }, [exitHandler]);
-}; 
+    }, [exitHandler, pathname]);
+};

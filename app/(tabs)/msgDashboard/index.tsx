@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Alert, StatusBar, Modal } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Alert, StatusBar, Modal, BackHandler } from 'react-native';
 import { Users, MessageSquare, Building2, MessagesSquare, Timer, LogIn, LogOut, Clock, Plus, EllipsisVertical, Outdent, Building } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import { useSession } from '@/context/ContextSession';
 import moment from "moment"
 import { ActivityIndicator } from 'react-native';
 import { ChatMessage, connectSocket, subscribeToNotifications } from '@/hooks/sockets/socketService';
+import { useDoubleTapToExit } from '@/hooks/useDoubleTapToExit';
 
 
 export default function ChatInterface() {
@@ -20,7 +21,11 @@ export default function ChatInterface() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const handleExit = () => {
+    BackHandler.exitApp();
+  };
 
+  useDoubleTapToExit(handleExit);
   const handleLogoutPress = async () => {
     setIsLoggingOut(true);
     try {
@@ -38,7 +43,6 @@ export default function ChatInterface() {
   };
 
   const friendsList = async () => {
-    console.log("juu")
     try {
       setLoading(true); // Start loading
       let url = "https://www.portstay.com/employee.chatUsers-mobile"
@@ -52,11 +56,12 @@ export default function ChatInterface() {
       });
 
       const data = await response.json();
-      console.log("dataqqa---", data)
       setCompanyTeam(data.team || data.helpdesk || data.HumanResources || data.support);
       if (sessionData?.role === "Superadmin") {
         setBranchList(data.branchList)
+
       }
+      // console.log("dataqqa---", data.friendList || data.superadminList[2])
       const extractLastMessage = (list: any) => list?.map((msg: any) => msg.message?.slice(-1)[0] || '--');
       setLastMessage({
         user: extractLastMessage(data.friendList || data.superadminList),
@@ -67,8 +72,13 @@ export default function ChatInterface() {
         user: data.friendList || data.superadminList,
         team: data.teamList,
         group: data.portList,
-        company: data.workingCompany
+        company: data.workingCompany,
+        branchList: data?.branchList
       });
+      // setMessages({
+      //   ...messages.user,
+      //   branchList: data.branchList
+      // });
     } catch (error) {
       // Alert.alert("error", "err." + error);
     } finally {
@@ -80,18 +90,8 @@ export default function ChatInterface() {
     useCallback(() => {
       friendsList();
       connectSocket(sessionData?.loginId, sessionData?.loginId, (newMessage: ChatMessage) => {
-        console.log("newMessage----", newMessage)
       }, (notification: any) => {
         // friendsList();
-        // console.log("notification----", notification)
-        // const user = messages.user.find((user: any) => user.id === notification.fromUserId);
-        // if (user) {
-        //   console.log("user----", user.message[user.message.length - 1])
-        //   user.numberOfUnSeenMessage = Number(user.numberOfUnSeenMessage) + 1;
-        //   user.message.push(notification);
-        //   setMessages({ ...messages, user: user });
-
-        // }
 
       });
     }, [sessionData]));
@@ -114,19 +114,19 @@ export default function ChatInterface() {
     const filterItems = (items: any[]) => {
       if (!items) return [];
       return items.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.branch && item.branch.toLowerCase().includes(searchQuery.toLowerCase()))
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     };
 
     return {
+      branchList: filterItems(branchList),
       user: filterItems(messages.user),
       team: filterItems(messages.team),
       group: filterItems(messages.group),
       company: filterItems(messages.company),
-      branchList: filterItems(branchList)
     };
   }, [messages, branchList, searchQuery]);
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -208,7 +208,7 @@ export default function ChatInterface() {
               <TouchableOpacity key={user.userId} style={styles.chatPreview}
                 onPress={() => router.push({
                   pathname: '/(tabs)/msgDashboard/messages/chat',
-                  params: { id: user.id, name: user.name }
+                  params: { id: user.id, name: user.name, avatar: user?.profile_pic ? `https://www.portstay.com/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }
                 })}>
                 <Image
                   source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
@@ -243,7 +243,6 @@ export default function ChatInterface() {
             </View>
           </TouchableOpacity>
           {sessionData?.role === "Superadmin" && (
-
             filteredItems.branchList?.map((branch: any, index: number) => (
               <TouchableOpacity key={branch.userId} style={styles.chatPreview}
                 onPress={() => router.push({
@@ -280,7 +279,7 @@ export default function ChatInterface() {
                 <Text numberOfLines={1} ellipsizeMode="tail" style={styles.chatMessage}>{lastMessage.user[index] === "--" ? '' : lastMessage.user[index].contents}</Text>
               </View>
               <View style={{ flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                <Text style={styles.timestamp}>{lastMessage.user[index] === "--" ? '' : formatMessageDate(lastMessage.user[index].timeSent)}{"  "}{formatTime(lastMessage.user[index].timeSent)}</Text>
+                <Text style={styles.timestamp}>{lastMessage.user[index].timeSent ? formatMessageDate(lastMessage.user[index].timeSent) + "  " + formatTime(lastMessage.user[index].timeSent) : ""}</Text>
                 {user?.numberOfUnSeenMessage > 0 && <Text style={styles.unseenMessage}>{user?.numberOfUnSeenMessage}</Text>}
               </View>
             </TouchableOpacity>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -16,14 +16,45 @@ export default function GroupDetails() {
     const params = useLocalSearchParams();
     const groupName = typeof params.groupName === 'string' ? params.groupName : 'Group Name';
     const groupImage = typeof params.groupImage === 'string' ? params.groupImage : null;
+    const data = typeof params.data === 'string' ? params.data : null;
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [groupMembers, setGroupMembers] = useState<any>([]);
+    console.log("data---", data)
 
-    // Mock data for demonstration
-    const groupMembers = [
-        { id: 1, name: 'John Doe', role: 'Admin', avatar: null },
-        { id: 2, name: 'Jane Smith', role: 'Member', avatar: null },
-        { id: 3, name: 'Mike Johnson', role: 'Member', avatar: null },
-        { id: 4, name: 'Sarah Wilson', role: 'Member', avatar: null },
-    ];
+    const friendsList = async () => {
+        try {
+            setIsLoading(true)
+            const response = await fetch(`https://www.portstay.com/mobile-port_post_list/${data}`, {
+                method: "GET",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+            })
+
+            if (response.ok) {
+                if (response.status === 204) {
+                } else {
+                    const data = await response.json()
+                    const groupUser = data.getAllPostOfPort?.map((user: any) => user.postedBy)
+                    console.log("dattt----", groupUser)
+                    setGroupMembers(groupUser)
+                }
+            }
+        } catch (error) {
+            // Alert.alert("Error", "Failed to fetch messages.")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+    useEffect(() => {
+        friendsList()
+    }, [data])
+    // const groupMembers = [
+    //     { id: 1, name: 'John Doe', role: 'Admin', avatar: null },
+    //     { id: 2, name: 'Jane Smith', role: 'Member', avatar: null },
+    //     { id: 3, name: 'Mike Johnson', role: 'Member', avatar: null },
+    //     { id: 4, name: 'Sarah Wilson', role: 'Member', avatar: null },
+    // ];
+
 
     return (
         <View style={styles.container}>
@@ -56,7 +87,7 @@ export default function GroupDetails() {
                 {/* Group Members Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Group Members</Text>
-                    {groupMembers.map((member) => (
+                    {groupMembers.map((member: any) => (
                         <View key={member.id} style={styles.memberItem}>
                             {member.avatar ? (
                                 <Image source={{ uri: member.avatar }} style={styles.memberAvatar} />
@@ -76,12 +107,12 @@ export default function GroupDetails() {
                 </View>
 
                 {/* Group Settings */}
-                <View style={styles.section}>
+                {/* <View style={styles.section}>
                     <TouchableOpacity style={styles.settingItem}>
                         <Feather name="trash-2" size={24} color="#ef4444" />
                         <Text style={[styles.settingText, styles.dangerText]}>Exit Group</Text>
                     </TouchableOpacity>
-                </View>
+                </View> */}
             </ScrollView>
         </View>
     );

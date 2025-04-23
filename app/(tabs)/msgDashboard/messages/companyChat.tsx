@@ -17,7 +17,7 @@ export default function ChatScreen() {
     const [message, setMessage] = useState("")
     const [messages, setMessages] = useState<any>([])
     const [images, setImages] = useState<any>([])
-    const [userData, setUserData] = useState<any>(null)
+    const [userData, setUserData] = useState<any>([])
     const [isKeyboardVisible, setKeyboardVisible] = useState(false)
     const [downloadingImages, setDownloadingImages] = useState<{ [key: string]: boolean }>({})
     const [showScrollTop, setShowScrollTop] = useState(false)
@@ -51,7 +51,7 @@ export default function ChatScreen() {
                 } else {
                     const data = await response.json()
                     const userMessage = data.getAllPostOfPort?.map((user: any) => user.post.images)
-                    setUserData({ name: name, avatar: null })
+                    setUserData(data.getAllPostOfPort)
                     setImages(userMessage)
                     setMessages(data.getAllPostOfPort || [])
                 }
@@ -65,6 +65,19 @@ export default function ChatScreen() {
     useEffect(() => {
         friendsList()
     }, [id])
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
+            setKeyboardVisible(true);
+        });
+
+        const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
+            setKeyboardVisible(false);
+        });
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
     const requestPermission = async () => {
         const { status } = await MediaLibrary.requestPermissionsAsync()
         return status === "granted"
@@ -334,8 +347,9 @@ export default function ChatScreen() {
                         onPress={() => router.push({
                             pathname: '/(tabs)/msgDashboard/group/groupDetails',
                             params: {
-                                groupName: userData?.name || "User",
-                                groupImage: userData?.avatar || null
+                                groupName: name || "User",
+                                groupImage: avatar,
+                                data: id
                             }
                         })}
                     >
@@ -359,24 +373,7 @@ export default function ChatScreen() {
                 ]}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
             >
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        value={message}
-                        onChangeText={setMessage}
-                        placeholder="Type a message..."
-                        multiline
-                        maxLength={500}
-                    />
-                    <TouchableOpacity
-                        style={styles.sendButton}
-                        onPress={sendMessage}
-                        activeOpacity={0.7}
-                        disabled={!message.trim()}
-                    >
-                        <Send color="#fff" size={20} />
-                    </TouchableOpacity>
-                </View>
+
                 {isLoading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#128C7E" />
@@ -428,6 +425,24 @@ export default function ChatScreen() {
                 ) : (
                     <EmptyChat />
                 )}
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.input}
+                        value={message}
+                        onChangeText={setMessage}
+                        placeholder="Type a message..."
+                        multiline
+                        maxLength={500}
+                    />
+                    <TouchableOpacity
+                        style={styles.sendButton}
+                        onPress={sendMessage}
+                        activeOpacity={0.7}
+                        disabled={!message.trim()}
+                    >
+                        <Send color="#fff" size={20} />
+                    </TouchableOpacity>
+                </View>
             </KeyboardAvoidingView>
             {showScrollTop && (
                 <TouchableOpacity

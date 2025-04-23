@@ -21,6 +21,7 @@ import { useSession } from "@/context/ContextSession"
 import moment from "moment"
 import { connectSocket, sendMessage as sendSocketMessage, ChatMessage } from '@/hooks/sockets/socketService'; // adjust the path as per your project structure
 import { subscribeToNotifications } from '@/hooks/sockets/socketService'; // adjust the path as per your project structure
+import { v4 as uuidv4 } from 'uuid';
 
 
 export default function ChatScreen() {
@@ -63,44 +64,37 @@ export default function ChatScreen() {
     const friendsList = async () => {
         setIsLoading(true);
         try {
-            let url = "https://www.portstay.com/employee.chatUsers-mobile"
+            const unseenResponse = await fetch(`https://www.portstay.com/api/private-chat/establishchannel${id}`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+            })
+            const chatResponse = await unseenResponse.json()
+            let url = `https://www.portstay.com/api/private-chat/channel/${chatResponse.channelId}`
             if (sessionData?.role === "Superadmin") {
-                url = "https://www.portstay.com/superadmin.chatUsers-Mobile"
+                url = `https://www.portstay.com/api/private-chat/channel/${chatResponse.channelId}`
             }
             const response = await fetch(url, {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
             })
-            const unseenResponse = await fetch(`https://www.portstay.com/api/private-chat/establishchannel${id}`, {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-            })
-            // const chatResponse = await fetch(`https://www.portstay.com/api/private-chat/mobile-establishchannel/${sessionData?.loginId}/${id}`, {
-            //     method: "GET",
-            //     credentials: "include",
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            // });
-            const chatResponse = await unseenResponse.json()
             const data = await response.json()
-            let userMessage = null;
-            if (sessionData?.role === "Superadmin") {
-                userMessage = data.superadminList.find((branch: any) => id === branch.id)
-                // console.log("data----", userMessage)
-            }
-            else {
-                userMessage = data.friendList.find((user: any) => id === user.id)
-            }
-            let branchMessage = null
-            if (sessionData?.role === "Superadmin") {
-                branchMessage = data.branchList.find((branch: any) => id === branch.id)
-            }
+            // let userMessage = null;
+            // if (sessionData?.role === "Superadmin") {
+            //     userMessage = data.superadminList.find((branch: any) => id === branch.id)
+            //     // console.log("data----", userMessage)
+            // }
+            // else {
+            //     userMessage = data.friendList.find((user: any) => id === user.id)
+            // }
+            // let branchMessage = null
+            // if (sessionData?.role === "Superadmin") {
+            //     branchMessage = data.branchList.find((branch: any) => id === branch.id)
+            // }
             setChannelId(chatResponse.channelId);
-            setUserData(userMessage || branchMessage || name || { name: "User", avatar: null })
-            setMessages(userMessage?.message || branchMessage?.message || [])
+            setUserData(name || { name: "User", avatar: null })
+            setMessages(data || [])
         } catch (error) {
             setIsLoading(false);
             // Alert.alert("Error", "Failed to fetch messages.")
@@ -119,10 +113,10 @@ export default function ChatScreen() {
                 setMessages((prevMessages: any) => [
                     ...prevMessages,
                     {
-                        id: prevMessages.length + 1,
+                        chatId: prevMessages.length + 1,
                         contents: newMessage.contents,
-                        authorUser: { id: newMessage.fromUserId },
-                        timeSent: newMessage.dateAndTime,
+                        fromUserId: newMessage.fromUserId,
+                        dateAndTime: newMessage.dateAndTime,
                     },
                 ]);
             }, (notification: any) => {
@@ -134,6 +128,7 @@ export default function ChatScreen() {
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
             setKeyboardVisible(true);
+            setTimeout(scrollToBottom, 0);
         });
 
         const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
@@ -144,16 +139,18 @@ export default function ChatScreen() {
             keyboardDidHideListener.remove();
         };
     }, []);
-
+    const generateMessageId = () => {
+        const timestamp = Math.floor(Date.now() / 1000).toString(16);
+        const random = Math.random().toString(16).substring(2, 10);
+        return `${timestamp}${random}`;
+    };
     const handleSendMessage = () => {
         if (message.trim()) {
             const newMessage: ChatMessage = {
                 dateAndTime: new Date().toISOString(),
-                chatId: "d",
+                chatId: generateMessageId(),
                 fromUserId: sessionData?.loginId,
                 contents: message as string,
-                fromUserName: 'Hremp L',
-                fromUserProfilePic: null,
                 toUserId: id as string,
                 type: 'private'
             };
@@ -183,7 +180,7 @@ export default function ChatScreen() {
         const groupedMessages: { [key: string]: any[] } = {}
 
         messages?.forEach((msg: any) => {
-            const dateKey = moment(msg.timeSent).format("YYYY-MM-DD")
+            const dateKey = moment(msg.dateAndTime).format("YYYY-MM-DD")
             if (!groupedMessages[dateKey]) {
                 groupedMessages[dateKey] = []
             }
@@ -196,7 +193,7 @@ export default function ChatScreen() {
                 data: groupedMessages[date],
             }))
             .sort((a, b) => {
-                return moment(b.data[0].timeSent).isBefore(moment(a.data[0].timeSent)) ? 1 : -1
+                return moment(b.data[0].dateAndTime).isBefore(moment(a.data[0].dateAndTime)) ? 1 : -1
             })
     }, [messages])
 
@@ -209,6 +206,10 @@ export default function ChatScreen() {
             <Text style={styles.emptySubtitle}>Start the conversation by sending a message below</Text>
         </View>
     )
+
+
+
+
 
     return (
         <View style={styles.container}>
@@ -244,17 +245,17 @@ export default function ChatScreen() {
                     <SectionList
                         ref={sectionListRef}
                         sections={messagesByDate}
-                        keyExtractor={(item) => item.id.toString()}
+                        keyExtractor={(item) => item.chatId}
                         getItemLayout={getItemLayout}
                         renderItem={({ item }) => (
                             <View
                                 style={[
                                     styles.messageBubble,
-                                    sessionData?.loginId === item.authorUser?.id ? styles.sentMessage : styles.receivedMessage,
+                                    sessionData?.loginId === item.fromUserId ? styles.sentMessage : styles.receivedMessage,
                                 ]}
                             >
                                 <Text style={styles.messageText}>{item.contents}</Text>
-                                <Text style={styles.timeText}>{formatTime(item.timeSent)}</Text>
+                                <Text style={styles.timeText}>{formatTime(item.dateAndTime)}</Text>
                             </View>
                         )}
                         renderSectionHeader={({ section: { title } }) => (

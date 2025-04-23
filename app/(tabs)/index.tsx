@@ -14,7 +14,8 @@ import {
   Modal,
   ActivityIndicator,
   Keyboard,
-  Dimensions
+  Dimensions,
+  BackHandler
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +23,8 @@ import Svg, { Path, G, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useSession } from '@/context/ContextSession';
 import { StatusBar } from 'expo-status-bar';
+import { useDoubleTapToExit } from '@/hooks/useDoubleTapToExit';
+
 export default function LoginScreen() {
   const { getSessionDetails } = useSession();
   const [currentScreen, setCurrentScreen] = useState('login');
@@ -40,6 +43,12 @@ export default function LoginScreen() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  const handleExit = () => {
+    BackHandler.exitApp();
+  };
+
+  useDoubleTapToExit(handleExit);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
