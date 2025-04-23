@@ -3,7 +3,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useEffect, useState, useMemo, useRef } from "react"
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, SectionList, KeyboardAvoidingView, Platform, Alert, StatusBar, Image, Keyboard, ActivityIndicator, ToastAndroid, SectionListRenderItem } from "react-native"
-import { Send, ArrowLeft, MoreVertical, Download, ArrowUp } from "lucide-react-native"
+import { Send, ArrowLeft, MoreVertical, Download, ArrowUp, ArrowDown } from "lucide-react-native"
 import { useSession } from "@/context/ContextSession"
 import moment from "moment"
 import * as MediaLibrary from "expo-media-library"
@@ -21,12 +21,16 @@ export default function ChatScreen() {
     const [isKeyboardVisible, setKeyboardVisible] = useState(false)
     const [downloadingImages, setDownloadingImages] = useState<{ [key: string]: boolean }>({})
     const [showScrollTop, setShowScrollTop] = useState(false)
+    const [showScrollDown, setShowScrollDown] = useState(false)
     const sectionListRef = useRef<SectionList>(null)
 
     const handleScroll = (event: any) => {
         const offsetY = event.nativeEvent.contentOffset.y;
-        // Show button if scrolled more than 300 pixels
-        setShowScrollTop(offsetY > 300);
+        const contentHeight = event.nativeEvent.contentSize.height;
+        const screenHeight = event.nativeEvent.layoutMeasurement.height;
+
+        // Show scroll down button if not at bottom
+        setShowScrollDown(offsetY + screenHeight < contentHeight - 100);
     };
 
     const scrollToTop = () => {
@@ -36,7 +40,18 @@ export default function ChatScreen() {
             animated: true,
         });
     };
-
+    const scrollToBottom = () => {
+        if (sectionListRef.current && messagesByDate.length > 0) {
+            const lastSectionIndex = messagesByDate.length - 1;
+            const lastItemIndex = messagesByDate[lastSectionIndex].data.length - 1;
+            sectionListRef.current.scrollToLocation({
+                sectionIndex: lastSectionIndex,
+                itemIndex: lastItemIndex,
+                animated: true,
+                viewPosition: 1
+            });
+        }
+    };
     const friendsList = async () => {
         try {
             setIsLoading(true)
@@ -68,6 +83,7 @@ export default function ChatScreen() {
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
             setKeyboardVisible(true);
+            setTimeout(scrollToBottom, 0);
         });
 
         const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
@@ -78,6 +94,11 @@ export default function ChatScreen() {
             keyboardDidHideListener.remove();
         };
     }, []);
+    useEffect(() => {
+        if (messages.length > 0) {
+            scrollToBottom();
+        }
+    }, [messages]);
     const requestPermission = async () => {
         const { status } = await MediaLibrary.requestPermissionsAsync()
         return status === "granted"
@@ -206,13 +227,13 @@ export default function ChatScreen() {
                 data: groupedMessages[date].sort((a, b) => {
                     const dateA = moment(a.post.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
                     const dateB = moment(b.post.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
-                    return dateB.diff(dateA)
+                    return dateA.diff(dateB)
                 }),
             }))
             .sort((a, b) => {
                 const dateA = moment(a.data[0].post.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
                 const dateB = moment(b.data[0].post.date, ["DD MMM YYYY [at] HH:mm", "YYYY-MM-DD HH:mm:ss"])
-                return dateB.diff(dateA) // Sort in descending order (newest first)
+                return dateA.diff(dateB) // Sort in descending order (newest first)
             })
     }, [messages])
 
@@ -312,7 +333,7 @@ export default function ChatScreen() {
                     setMessage("");
                     // Scroll to top after sending message
                     setTimeout(() => {
-                        scrollToTop();
+                        scrollToBottom();
                     }, 100);
                 } else {
                     Alert.alert("Error", "Failed to send message");
@@ -331,11 +352,34 @@ export default function ChatScreen() {
         return moment(date).format("h:mm A")
     }
 
+    const getItemLayout = (data: any, index: number) => ({
+        length: 100,
+        offset: 100 * index,
+        index,
+    });
+
+    const getRandomColor = (userId: string) => {
+        const colors = [
+            '#E74C3C', // Red
+            '#2ECC71', // Green
+            '#3498DB', // Blue
+            '#9B59B6', // Purple
+            '#F1C40F', // Yellow
+            '#E67E22', // Orange
+            '#1ABC9C', // Turquoise
+            '#34495E', // Dark Blue
+            '#C0392B', // Dark Red
+            '#27AE60', // Dark Green
+        ];
+
+        const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+        return colors[index];
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#128C7E" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
                     <ArrowLeft color="#FFFFFF" size={24} />
@@ -384,7 +428,19 @@ export default function ChatScreen() {
                         ref={sectionListRef}
                         sections={messagesByDate}
                         keyExtractor={(item) => item.post?.id?.toString()}
+                        getItemLayout={getItemLayout}
+                        onScrollToIndexFailed={(info) => {
+                            const wait = new Promise(resolve => setTimeout(resolve, 500));
+                            wait.then(() => {
+                                sectionListRef.current?.scrollToLocation({
+                                    sectionIndex: info.index,
+                                    itemIndex: 0,
+                                    animated: true,
+                                });
+                            });
+                        }}
                         renderItem={({ item }) => {
+                            const nameColor = getRandomColor(item.postedBy.id);
                             return (
                                 <View style={styles.msgContainer}>
                                     <View>
@@ -396,10 +452,9 @@ export default function ChatScreen() {
                                     <View
                                         style={[
                                             styles.messageBubble, styles.receivedMessage,
-                                            // sessionData?.loginId === item.post?.postedBy ? styles.sentMessage : styles.receivedMessage,
                                         ]}
                                     >
-                                        <Text style={styles.messagerName}>{item.postedBy.fullName}</Text>
+                                        <Text style={[styles.messagerName, { color: nameColor }]}>{item.postedBy.fullName}</Text>
                                         {item.post?.images && (
                                             <ImageWithDownload
                                                 imageUrl={`https://www.portstay.com/imageController/${item.post?.images?.imageNames}.do`}
@@ -447,10 +502,19 @@ export default function ChatScreen() {
             {showScrollTop && (
                 <TouchableOpacity
                     style={styles.scrollTopButton}
-                    onPress={scrollToTop}
+                    onPress={scrollToBottom}
                     activeOpacity={0.7}
                 >
                     <ArrowUp color="#FFFFFF" size={24} />
+                </TouchableOpacity>
+            )}
+            {showScrollDown && (
+                <TouchableOpacity
+                    style={styles.scrollDownButton}
+                    onPress={scrollToBottom}
+                    activeOpacity={0.7}
+                >
+                    <ArrowDown color="#FFFFFF" size={24} />
                 </TouchableOpacity>
             )}
         </View>
@@ -572,7 +636,8 @@ const styles = StyleSheet.create({
     },
     messagerName: {
         textTransform: "capitalize",
-        color: "red",
+        fontWeight: '600',
+        marginBottom: 4,
     },
     imageContainer: {
         position: "relative",
@@ -701,5 +766,21 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#128C7E',
         fontWeight: '500',
+    },
+    scrollDownButton: {
+        position: 'absolute',
+        right: 20,
+        bottom: 100,
+        backgroundColor: '#128C7E',
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
     },
 })
