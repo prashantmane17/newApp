@@ -40,7 +40,7 @@ import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { SessionProvider } from '@/context/ContextSession';
+import { SessionProvider, useSession } from '@/context/ContextSession';
 import { useRouter, usePathname } from 'expo-router';
 import { MessageSquare, DollarSign, Settings, User, LogOut } from 'lucide-react-native';
 
@@ -50,7 +50,7 @@ export default function StackLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const pathname = usePathname();
-
+  const { handleLogout } = useSession();
   const navigationItems: { name: string; route: RouteType; icon: React.ReactNode }[] = [
     {
       name: 'Message',
@@ -72,16 +72,13 @@ export default function StackLayout() {
       route: '/(tabs)/profile',
       icon: <Settings size={24} />
     },
-    {
-      name: 'Logout',
-      route: '/(tabs)/logout',
-      icon: <LogOut size={24} />
-    }
+
   ];
 
   return (
     <SessionProvider>
       <View style={styles.container}>
+        {/* <View style={pathname === '/' ? styles.content : styles.screenContent}> */}
         <View style={styles.content}>
           <Stack
             screenOptions={{
@@ -101,25 +98,32 @@ export default function StackLayout() {
         </View>
 
         {/* Custom Bottom Navigation (hidden on '/') */}
-        {/* {pathname !== '/' && ( */}
-        <View style={styles.bottomNav}>
-          {navigationItems.map((item) => (
+        {pathname !== '/' && (
+          <View style={styles.bottomNav}>
+            {navigationItems.map((item) => (
+              <TouchableOpacity
+                key={item.name}
+                style={[
+                  styles.navItem,
+                  pathname === item.route ? styles.activeItem : null
+                ]}
+                onPress={() => router.push(item.route as any)}
+              >
+                {React.cloneElement(item.icon as React.ReactElement, {
+                  color: "white"
+                })}
+                <Text style={styles.navText}>{item.name}</Text>
+              </TouchableOpacity>
+            ))}
             <TouchableOpacity
-              key={item.name}
-              style={[
-                styles.navItem,
-                pathname === item.route ? styles.activeItem : null
-              ]}
-              onPress={() => router.push(item.route as any)}
+              style={styles.navItem}
+              onPress={() => handleLogout()}
             >
-              {React.cloneElement(item.icon as React.ReactElement, {
-                color: item.name === "Logout" ? "red" : "white"
-              })}
-              <Text style={styles.navText}>{item.name}</Text>
+              <LogOut size={24} color="red" />
+              <Text style={styles.navText}>Logout</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-        {/* )} */}
+          </View>
+        )}
       </View>
     </SessionProvider>
   );
@@ -128,8 +132,14 @@ export default function StackLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "white",
   },
-  content: {  
+  content: {
+    flex: 1,
+    backgroundColor: "white",
+    // paddingBottom: 60,
+  },
+  screenContent: {
     flex: 1,
     paddingBottom: 60,
   },

@@ -1,404 +1,484 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Image, Share, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    TouchableOpacity,
+    Alert,
+    ActivityIndicator,
+    Platform,
+    Dimensions
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as Print from 'expo-print';
+import * as MediaLibrary from 'expo-media-library';
+import * as DocumentPicker from 'expo-document-picker';
+import * as IntentLauncher from 'expo-intent-launcher';
+import { StorageAccessFramework } from 'expo-file-system';
+import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Sample data for payslips - expanded to show all months
-const payslipsData = [
-    {
-        id: '1',
-        month: 'March',
-        year: '2025',
-        date: 'March 31, 2025',
-        amount: '₹4,250.00',
-        status: 'Paid',
-    },
-    {
-        id: '2',
-        month: 'February',
-        year: '2025',
-        date: 'February 28, 2025',
-        amount: '₹4,250.00',
-        status: 'Paid',
-    },
-    {
-        id: '3',
-        month: 'January',
-        year: '2025',
-        date: 'January 31, 2025',
-        amount: '₹4,250.00',
-        status: 'Paid',
-    },
-    {
-        id: '4',
-        month: 'December',
-        year: '2024',
-        date: 'December 31, 2024',
-        amount: '₹4,100.00',
-        status: 'Paid',
-    },
-    {
-        id: '5',
-        month: 'November',
-        year: '2024',
-        date: 'November 30, 2024',
-        amount: '₹4,100.00',
-        status: 'Paid',
-    },
-    {
-        id: '6',
-        month: 'October',
-        year: '2024',
-        date: 'October 31, 2024',
-        amount: '₹4,100.00',
-        status: 'Paid',
-    },
-    {
-        id: '7',
-        month: 'September',
-        year: '2024',
-        date: 'September 30, 2024',
-        amount: '₹4,100.00',
-        status: 'Paid',
-    },
-    {
-        id: '8',
-        month: 'August',
-        year: '2024',
-        date: 'August 31, 2024',
-        amount: '₹4,100.00',
-        status: 'Paid',
-    },
-    {
-        id: '9',
-        month: 'July',
-        year: '2024',
-        date: 'July 31, 2024',
-        amount: '₹4,100.00',
-        status: 'Paid',
-    },
-    {
-        id: '10',
-        month: 'June',
-        year: '2024',
-        date: 'June 30, 2024',
-        amount: '₹4,000.00',
-        status: 'Paid',
-    },
-    {
-        id: '11',
-        month: 'May',
-        year: '2024',
-        date: 'May 31, 2024',
-        amount: '₹4,000.00',
-        status: 'Paid',
-    },
-    {
-        id: '12',
-        month: 'April',
-        year: '2024',
-        date: 'April 30, 2024',
-        amount: '₹4,000.00',
-        status: 'Paid',
-    },
-];
+const { width } = Dimensions.get('window');
 
 export default function PayslipsScreen() {
-    const [selectedPayslip, setSelectedPayslip] = useState(payslipsData[1]);
-    const [showPdf, setShowPdf] = useState(false);
-    const [filterYear, setFilterYear] = useState('All');
+    const { data } = useLocalSearchParams();
+    const [empSalary, setEmpSalary] = useState<any>({});
+    const [loading, setLoading] = useState(false);
+    const [month, setMonth] = useState('');
+    const [year, setYear] = useState('');
     const router = useRouter();
 
-    // Filter payslips based on selected year
-    const filteredPayslips = filterYear === 'All'
-        ? payslipsData
-        : payslipsData.filter(item => item.year === filterYear);
+    useEffect(() => {
+        if (typeof data === 'string') {
+            try {
+                const parsed = JSON.parse(data);
+                console.log("Parsed Data:", parsed);
+                setEmpSalary(parsed);
 
-    const handleSharePayslip = async () => {
+                // Set current month and year
+                const date = new Date();
+                setMonth(date.toLocaleString('default', { month: 'long' }));
+                setYear(date.getFullYear().toString());
+            } catch (err) {
+                console.error("Failed to parse JSON:", err);
+                Alert.alert("Error", "Failed to load payslip data");
+            }
+        }
+    }, [data]);
+
+    const generatePdfHtml = () => {
+        return `
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+          <style>
+            body {
+              font-family: 'Helvetica', sans-serif;
+              margin: 0;
+              padding: 20px;
+              color: #333;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #4f46e5;
+            }
+            .company-name {
+              font-size: 24px;
+              font-weight: bold;
+              color: #4f46e5;
+              margin-bottom: 5px;
+            }
+            .document-title {
+              font-size: 18px;
+              color: #666;
+              margin-bottom: 5px;
+            }
+            .period {
+              font-size: 16px;
+              color: #888;
+            }
+            .employee-info {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 30px;
+              padding: 15px;
+              background-color: #f8f9fa;
+              border-radius: 8px;
+            }
+            .info-column {
+              flex: 1;
+            }
+            .info-label {
+              font-size: 12px;
+              color: #666;
+              margin-bottom: 3px;
+            }
+            .info-value {
+              font-size: 14px;
+              font-weight: 500;
+              margin-bottom: 10px;
+            }
+            .section {
+              margin-bottom: 25px;
+              border: 1px solid #eee;
+              border-radius: 8px;
+              overflow: hidden;
+            }
+            .section-title {
+              font-size: 16px;
+              font-weight: 600;
+              padding: 12px 15px;
+              background-color: #f0f4ff;
+              color: #4f46e5;
+              border-bottom: 1px solid #eee;
+            }
+            .section-content {
+              padding: 0;
+            }
+            .row {
+              display: flex;
+              justify-content: space-between;
+              padding: 12px 15px;
+              border-bottom: 1px solid #eee;
+            }
+            .row:last-child {
+              border-bottom: none;
+            }
+            .label {
+              font-size: 14px;
+              color: #555;
+            }
+            .value {
+              font-size: 14px;
+              font-weight: 500;
+            }
+            .total-row {
+              background-color: #f0f4ff;
+              font-weight: 600;
+            }
+            .net-pay {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 15px;
+              background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+              color: white;
+              border-radius: 8px;
+              margin-top: 20px;
+            }
+            .net-pay-label {
+              font-size: 16px;
+              font-weight: bold;
+            }
+            .net-pay-value {
+              font-size: 22px;
+              font-weight: bold;
+            }
+            .footer {
+              margin-top: 40px;
+              text-align: center;
+              font-size: 12px;
+              color: #888;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="company-name">Portstay</div>
+            <div class="document-title">Salary Slip</div>
+            <div class="period">${month} ${year}</div>
+          </div>
+          
+          <div class="employee-info">
+            <div class="info-column">
+              <div class="info-label">Employee Name</div>
+              <div class="info-value">John Doe</div>
+              
+              <div class="info-label">Employee ID</div>
+              <div class="info-value">EMP001</div>
+            </div>
+            
+            <div class="info-column">
+              <div class="info-label">Department</div>
+              <div class="info-value">Engineering</div>
+              
+              <div class="info-label">Designation</div>
+              <div class="info-value">Software Engineer</div>
+            </div>
+            
+            <div class="info-column">
+              <div class="info-label">Bank Account</div>
+              <div class="info-value">XXXX1234</div>
+              
+              <div class="info-label">PAN</div>
+              <div class="info-value">ABCDE1234F</div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <div class="section-title">Earnings</div>
+            <div class="section-content">
+              <div class="row">
+                <div class="label">Basic Salary</div>
+                <div class="value">₹${empSalary.basicSal || 0}</div>
+              </div>
+              <div class="row">
+                <div class="label">House Rent Allowance</div>
+                <div class="value">₹${empSalary.hra || 0}</div>
+              </div>
+              <div class="row">
+                <div class="label">Fixed Allowance</div>
+                <div class="value">₹${empSalary.fixedAllow || 0}</div>
+              </div>
+              <div class="row total-row">
+                <div class="label">Gross Pay</div>
+                <div class="value">₹${empSalary.grossPay || 0}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="net-pay">
+            <div class="net-pay-label">Net Pay</div>
+            <div class="net-pay-value">₹${empSalary.monthlyCTC || 0}</div>
+          </div>
+          
+          <div class="footer">
+            <p>This is a computer-generated document. No signature is required.</p>
+            <p>© ${year} Portstay. All rights reserved.</p>
+          </div>
+        </body>
+      </html>
+    `;
+    };
+
+    const downloadPdf = async () => {
         try {
-            await Share.share({
-                message: `${selectedPayslip.month} ${selectedPayslip.year} Payslip - Net Amount: ${selectedPayslip.amount}`,
-                title: `${selectedPayslip.month} ${selectedPayslip.year} Payslip`,
-                url: 'https://example.com/payslip.pdf', // This would be the actual PDF URL in a real app
-            });
+            setLoading(true);
+
+            const html = generatePdfHtml(); // Your HTML template
+            const { uri } = await Print.printToFileAsync({ html });
+
+            const fileName = `Payslip-${month}-${year}.pdf`;
+
+            if (Platform.OS === 'android') {
+                // Try fetching the directory URI from AsyncStorage
+                const storedDirectoryUri = await AsyncStorage.getItem('pdfDirectoryUri');
+
+                let directoryUri = storedDirectoryUri;
+
+                if (!directoryUri) {
+                    // Request permissions and ask user to select the folder
+                    const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+                    if (!permissions.granted) {
+                        Alert.alert('Permission Denied', 'Cannot access the file system');
+                        setLoading(false);
+                        return;
+                    }
+
+                    directoryUri = permissions.directoryUri;
+
+                    // Save the selected directory URI for future use
+                    await AsyncStorage.setItem('pdfDirectoryUri', directoryUri);
+                }
+
+                // Now that we have the directory URI, create and write to the file
+                const base64 = await FileSystem.readAsStringAsync(uri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                });
+
+                const fileUri = await StorageAccessFramework.createFileAsync(
+                    directoryUri,
+                    fileName,
+                    'application/pdf'
+                );
+
+                await FileSystem.writeAsStringAsync(fileUri, base64, {
+                    encoding: FileSystem.EncodingType.Base64,
+                });
+
+                Alert.alert('Success', `PDF saved successfully`);
+            } else {
+                // iOS fallback: Share the file on iOS
+                await Sharing.shareAsync(uri, {
+                    UTI: '.pdf',
+                    mimeType: 'application/pdf',
+                });
+            }
+
+            setLoading(false);
         } catch (error) {
-            console.error('Error sharing payslip:', error);
+            console.error('Error generating PDF:', error);
+            Alert.alert('Error', 'Failed to generate PDF');
+            setLoading(false);
         }
     };
-    interface Payslip {
-        id: string;
-        month: string;
-        year: string;
-        date: string;
-        amount: string;
-        status: string;
-    }
-    const renderPayslipItem = ({ item }: { item: Payslip }) => (
-        <TouchableOpacity
-            style={styles.payslipItem}
-            onPress={() => {
-                setSelectedPayslip(item);
-                setShowPdf(false);
-            }}
-        >
-            <View style={styles.payslipIconContainer}>
-                <Feather name="file-text" size={20} color="#4f46e5" />
-            </View>
-            <View style={styles.payslipContent}>
-                <Text style={styles.payslipTitle}>{item.month} {item.year} Payslip</Text>
-                <Text style={styles.payslipDate}>{item.date}</Text>
-            </View>
-            <View style={styles.payslipAmountContainer}>
-                <Text style={styles.payslipAmount}>{item.amount}</Text>
-                <View style={styles.payslipStatusContainer}>
-                    <View style={styles.payslipStatusDot} />
-                    <Text style={styles.payslipStatus}>{item.status}</Text>
-                </View>
-            </View>
-            <Feather name="chevron-right" size={20} color="#9ca3af" />
-        </TouchableOpacity>
-    );
 
-    const renderPdfViewer = () => (
-        <View style={styles.pdfContainer}>
-            {/* This would be a PDF viewer in a real app, using a placeholder image here */}
-            <View style={styles.pdfHeader}>
-                <Text style={styles.pdfHeaderTitle}>
-                    {selectedPayslip.month} {selectedPayslip.year} Payslip
-                </Text>
-            </View>
+    const sharePdf = async () => {
+        try {
+            setLoading(true);
 
-            <View style={styles.pdfContent}>
-                {/* Placeholder for PDF content */}
-                <View style={styles.pdfPlaceholder}>
-                    <View style={styles.pdfCompanyHeader}>
-                        <Text style={styles.pdfCompanyName}>ACME CORPORATION</Text>
-                        <Text style={styles.pdfDocumentTitle}>PAYSLIP</Text>
-                        <Text style={styles.pdfPeriod}>Pay Period: {selectedPayslip.month} {selectedPayslip.year}</Text>
-                    </View>
+            // Generate PDF
+            const html = generatePdfHtml();
+            const { uri } = await Print.printToFileAsync({ html });
 
-                    <View style={styles.pdfEmployeeInfo}>
-                        <View style={styles.pdfInfoColumn}>
-                            <Text style={styles.pdfInfoLabel}>Employee:</Text>
-                            <Text style={styles.pdfInfoValue}>John Doe</Text>
-                            <Text style={styles.pdfInfoLabel}>Employee ID:</Text>
-                            <Text style={styles.pdfInfoValue}>EMP-12345</Text>
-                        </View>
-                        <View style={styles.pdfInfoColumn}>
-                            <Text style={styles.pdfInfoLabel}>Department:</Text>
-                            <Text style={styles.pdfInfoValue}>Engineering</Text>
-                            <Text style={styles.pdfInfoLabel}>Position:</Text>
-                            <Text style={styles.pdfInfoValue}>Senior Developer</Text>
-                        </View>
-                    </View>
+            // Set the custom name for the PDF file
+            const month = "May"; // Replace with actual month
+            const year = "2025"; // Replace with actual year
+            const fileName = `Payslip-${month}-${year}.pdf`;
 
-                    <View style={styles.pdfTable}>
-                        <View style={styles.pdfTableHeader}>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableHeaderText]}>Earnings</Text>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableHeaderText]}>Amount</Text>
-                        </View>
-                        <View style={styles.pdfTableRow}>
-                            <Text style={styles.pdfTableCell}>Basic Salary</Text>
-                            <Text style={styles.pdfTableCell}>₹4,000.00</Text>
-                        </View>
-                        <View style={styles.pdfTableRow}>
-                            <Text style={styles.pdfTableCell}>Bonus</Text>
-                            <Text style={styles.pdfTableCell}>₹500.00</Text>
-                        </View>
-                        <View style={styles.pdfTableRow}>
-                            <Text style={styles.pdfTableCell}>Overtime</Text>
-                            <Text style={styles.pdfTableCell}>₹500.00</Text>
-                        </View>
-                        <View style={[styles.pdfTableRow, styles.pdfTableTotal]}>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>Total Earnings</Text>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>₹5,000.00</Text>
-                        </View>
-                    </View>
+            // Get a temporary directory for the file (or use a folder of your choice)
+            const filePath = FileSystem.documentDirectory + fileName;
 
-                    <View style={styles.pdfTable}>
-                        <View style={styles.pdfTableHeader}>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableHeaderText]}>Deductions</Text>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableHeaderText]}>Amount</Text>
-                        </View>
-                        <View style={styles.pdfTableRow}>
-                            <Text style={styles.pdfTableCell}>Income Tax</Text>
-                            <Text style={styles.pdfTableCell}>₹500.00</Text>
-                        </View>
-                        <View style={styles.pdfTableRow}>
-                            <Text style={styles.pdfTableCell}>Health Insurance</Text>
-                            <Text style={styles.pdfTableCell}>₹150.00</Text>
-                        </View>
-                        <View style={styles.pdfTableRow}>
-                            <Text style={styles.pdfTableCell}>Retirement</Text>
-                            <Text style={styles.pdfTableCell}>₹100.00</Text>
-                        </View>
-                        <View style={[styles.pdfTableRow, styles.pdfTableTotal]}>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>Total Deductions</Text>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>₹750.00</Text>
-                        </View>
-                    </View>
+            // Rename the generated PDF to the desired name
+            await FileSystem.moveAsync({
+                from: uri,
+                to: filePath,
+            });
 
-                    <View style={styles.pdfNetPay}>
-                        <Text style={styles.pdfNetPayLabel}>NET PAY</Text>
-                        <Text style={styles.pdfNetPayAmount}>{selectedPayslip.amount}</Text>
-                    </View>
-                </View>
-            </View>
+            // Now share the renamed file
+            await Sharing.shareAsync(filePath, {
+                UTI: '.pdf',
+                mimeType: 'application/pdf',
+            });
 
-            <View style={styles.pdfActions}>
-                <TouchableOpacity style={styles.pdfActionButton} onPress={() => console.log('Download PDF')}>
-                    <Feather name="download" size={20} color="#4f46e5" />
-                    <Text style={styles.pdfActionText}>Download</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.pdfActionButton} onPress={handleSharePayslip}>
-                    <Feather name="share-2" size={20} color="#4f46e5" />
-                    <Text style={styles.pdfActionText}>Share</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.pdfActionButton} onPress={() => console.log('Print PDF')}>
-                    <Feather name="printer" size={20} color="#4f46e5" />
-                    <Text style={styles.pdfActionText}>Print</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
+            setLoading(false);
+        } catch (error) {
+            console.error('Error sharing PDF:', error);
+            Alert.alert('Error', 'Failed to share PDF');
+            setLoading(false);
+        }
+    };
 
     return (
         <View style={styles.container}>
-            {selectedPayslip ? (
-                showPdf ? (
-                    <View style={styles.pdfViewerContainer}>
-                        <TouchableOpacity
-                            style={styles.backButton}
-                            onPress={() => setShowPdf(false)}
-                        >
-                            <Feather name="arrow-left" size={20} color="#4f46e5" />
-                            <Text style={styles.backButtonText}>Back to Details</Text>
-                        </TouchableOpacity>
+            <ScrollView style={styles.payslipDetailContainer}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => router.back()}
+                >
+                    <Feather name="arrow-left" size={20} color="#4f46e5" />
+                    <Text style={styles.backButtonText}>Back to Payslips</Text>
+                </TouchableOpacity>
 
-                        {renderPdfViewer()}
+                <View style={styles.payslipDetailHeader}>
+                    <Text style={styles.payslipDetailTitle}>
+                        Payslip for {month} {year}
+                    </Text>
+                    <Text style={styles.payslipDetailDate}>
+                        Generated on {new Date().toLocaleDateString()}
+                    </Text>
+                </View>
+
+                <View style={styles.payslipDetailCard}>
+                    <LinearGradient
+                        colors={['#4f46e5', '#7c3aed']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.netPayCard}
+                    >
+                        <View>
+                            <Text style={styles.netPayLabel}>Net Pay</Text>
+                            <Text style={styles.netPayValue}>₹{empSalary.monthlyCTC || 0}</Text>
+                        </View>
+                        <View style={styles.netPayIcon}>
+                            <Feather name="credit-card" size={24} color="white" />
+                        </View>
+                    </LinearGradient>
+
+                    <View style={styles.employeeInfoCard}>
+                        <View style={styles.employeeInfoRow}>
+                            <View style={styles.employeeInfoItem}>
+                                <Text style={styles.employeeInfoLabel}>Employee ID</Text>
+                                <Text style={styles.employeeInfoValue}>EMP001</Text>
+                            </View>
+                            <View style={styles.employeeInfoItem}>
+                                <Text style={styles.employeeInfoLabel}>Department</Text>
+                                <Text style={styles.employeeInfoValue}>Engineering</Text>
+                            </View>
+                        </View>
+                        <View style={styles.employeeInfoRow}>
+                            <View style={styles.employeeInfoItem}>
+                                <Text style={styles.employeeInfoLabel}>Pay Period</Text>
+                                <Text style={styles.employeeInfoValue}>{month} {year}</Text>
+                            </View>
+                            <View style={styles.employeeInfoItem}>
+                                <Text style={styles.employeeInfoLabel}>Pay Date</Text>
+                                <Text style={styles.employeeInfoValue}>{new Date().toLocaleDateString()}</Text>
+                            </View>
+                        </View>
                     </View>
-                ) : (
-                    <ScrollView style={styles.payslipDetailContainer}>
-                        <TouchableOpacity
-                            style={styles.backButton}
-                            onPress={() => router.back()}
-                        >
-                            <Feather name="arrow-left" size={20} color="#4f46e5" />
-                            <Text style={styles.backButtonText}>Back to Payslips</Text>
-                        </TouchableOpacity>
 
-                        <View style={styles.payslipDetailHeader}>
-                            <Text style={styles.payslipDetailTitle}>
-                                {selectedPayslip.month} {selectedPayslip.year} Payslip
-                            </Text>
-                            <Text style={styles.payslipDetailDate}>{selectedPayslip.date}</Text>
+                    <View style={styles.payslipDetailSection}>
+                        <View style={styles.sectionHeader}>
+                            <Feather name="dollar-sign" size={18} color="#4f46e5" />
+                            <Text style={styles.payslipDetailSectionTitle}>Earnings</Text>
+                        </View>
+                        <View style={styles.payslipDetailRow}>
+                            <Text style={styles.payslipDetailLabel}>Basic Salary</Text>
+                            <Text style={styles.payslipDetailValue}>₹{empSalary.basicSal || 0}</Text>
+                        </View>
+                        <View style={styles.payslipDetailRow}>
+                            <Text style={styles.payslipDetailLabel}>House Rent Allowance</Text>
+                            <Text style={styles.payslipDetailValue}>₹{empSalary.hra || 0}</Text>
+                        </View>
+                        <View style={styles.payslipDetailRow}>
+                            <Text style={styles.payslipDetailLabel}>Fixed Allowance</Text>
+                            <Text style={styles.payslipDetailValue}>₹{empSalary.fixedAllow || 0}</Text>
                         </View>
 
-                        <View style={styles.payslipDetailCard}>
-                            <View style={styles.payslipDetailRow}>
-                                <Text style={styles.payslipDetailLabel}>Net Pay</Text>
-                                <Text style={styles.payslipDetailValue}>{selectedPayslip.amount}</Text>
-                            </View>
-
-                            <View style={styles.payslipDetailSection}>
-                                <Text style={styles.payslipDetailSectionTitle}>Earnings</Text>
-                                <View style={styles.payslipDetailRow}>
-                                    <Text style={styles.payslipDetailLabel}>Basic Salary</Text>
-                                    <Text style={styles.payslipDetailValue}>₹4,000.00</Text>
-                                </View>
-                                <View style={styles.payslipDetailRow}>
-                                    <Text style={styles.payslipDetailLabel}>Bonus</Text>
-                                    <Text style={styles.payslipDetailValue}>₹500.00</Text>
-                                </View>
-                                <View style={styles.payslipDetailRow}>
-                                    <Text style={styles.payslipDetailLabel}>Overtime</Text>
-                                    <Text style={styles.payslipDetailValue}>₹500.00</Text>
-                                </View>
-                                <View style={[styles.payslipDetailRow, styles.payslipDetailTotal]}>
-                                    <Text style={styles.payslipDetailTotalLabel}>Total Earnings</Text>
-                                    <Text style={styles.payslipDetailTotalValue}>₹5,000.00</Text>
-                                </View>
-                            </View>
-
-                            <View style={styles.payslipDetailSection}>
-                                <Text style={styles.payslipDetailSectionTitle}>Deductions</Text>
-                                <View style={styles.payslipDetailRow}>
-                                    <Text style={styles.payslipDetailLabel}>Income Tax</Text>
-                                    <Text style={styles.payslipDetailValue}>₹500.00</Text>
-                                </View>
-                                <View style={styles.payslipDetailRow}>
-                                    <Text style={styles.payslipDetailLabel}>Health Insurance</Text>
-                                    <Text style={styles.payslipDetailValue}>₹150.00</Text>
-                                </View>
-                                <View style={styles.payslipDetailRow}>
-                                    <Text style={styles.payslipDetailLabel}>Retirement</Text>
-                                    <Text style={styles.payslipDetailValue}>₹100.00</Text>
-                                </View>
-                                <View style={[styles.payslipDetailRow, styles.payslipDetailTotal]}>
-                                    <Text style={styles.payslipDetailTotalLabel}>Total Deductions</Text>
-                                    <Text style={styles.payslipDetailTotalValue}>₹750.00</Text>
-                                </View>
-                            </View>
+                        <View style={[styles.payslipDetailRow, styles.payslipDetailTotal]}>
+                            <Text style={styles.payslipDetailTotalLabel}>Gross Pay</Text>
+                            <Text style={styles.payslipDetailTotalValue}>₹{empSalary.grossPay || 0}</Text>
                         </View>
+                    </View>
 
-                        <View style={styles.actionButtonsContainer}>
-                            <TouchableOpacity
-                                style={styles.viewPdfButton}
-                                onPress={() => setShowPdf(true)}
-                            >
-                                <Feather name="file-text" size={16} color="#fff" />
-                                <Text style={styles.viewPdfButtonText}>View PDF</Text>
-                            </TouchableOpacity>
+                    {/* You can uncomment and use this section if needed
+          <View style={styles.payslipDetailSection}>
+            <View style={styles.sectionHeader}>
+              <Feather name="minus-circle" size={18} color="#4f46e5" />
+              <Text style={styles.payslipDetailSectionTitle}>Deductions</Text>
+            </View>
+            <View style={styles.payslipDetailRow}>
+              <Text style={styles.payslipDetailLabel}>Income Tax</Text>
+              <Text style={styles.payslipDetailValue}>₹500.00</Text>
+            </View>
+            <View style={styles.payslipDetailRow}>
+              <Text style={styles.payslipDetailLabel}>Health Insurance</Text>
+              <Text style={styles.payslipDetailValue}>₹150.00</Text>
+            </View>
+            <View style={styles.payslipDetailRow}>
+              <Text style={styles.payslipDetailLabel}>Retirement</Text>
+              <Text style={styles.payslipDetailValue}>₹100.00</Text>
+            </View>
+            <View style={[styles.payslipDetailRow, styles.payslipDetailTotal]}>
+              <Text style={styles.payslipDetailTotalLabel}>Total Deductions</Text>
+              <Text style={styles.payslipDetailTotalValue}>₹750.00</Text>
+            </View>
+          </View>
+          */}
+                </View>
 
-                            {/* <TouchableOpacity
-                                style={styles.shareButton}
-                                onPress={handleSharePayslip}
-                            >
-                                <Feather name="share-2" size={16} color="#fff" />
-                                <Text style={styles.shareButtonText}>Share</Text>
-                            </TouchableOpacity> */}
-                        </View>
-                    </ScrollView>
-                )
-            ) : (
-                <FlatList
-                    data={filteredPayslips}
-                    renderItem={renderPayslipItem}
-                    keyExtractor={item => item.id}
-                    contentContainerStyle={styles.payslipsList}
-                    ListHeaderComponent={
-                        <View style={styles.filterContainer}>
-                            <Text style={styles.filterLabel}>Filter by:</Text>
-                            <View style={styles.filterButtons}>
-                                <TouchableOpacity
-                                    style={[styles.filterButton, filterYear === 'All' && styles.filterButtonActive]}
-                                    onPress={() => setFilterYear('All')}
-                                >
-                                    <Text style={filterYear === 'All' ? styles.filterButtonTextActive : styles.filterButtonText}>
-                                        All
-                                    </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[styles.filterButton, filterYear === '2025' && styles.filterButtonActive]}
-                                    onPress={() => setFilterYear('2025')}
-                                >
-                                    <Text style={filterYear === '2025' ? styles.filterButtonTextActive : styles.filterButtonText}>
-                                        2025
-                                    </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[styles.filterButton, filterYear === '2024' && styles.filterButtonActive]}
-                                    onPress={() => setFilterYear('2024')}
-                                >
-                                    <Text style={filterYear === '2024' ? styles.filterButtonTextActive : styles.filterButtonText}>
-                                        2024
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    }
-                />
-            )}
+                <View style={styles.actionButtonsContainer}>
+                    <TouchableOpacity
+                        style={styles.downloadButton}
+                        onPress={downloadPdf}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                            <>
+                                <Feather name="download" size={18} color="#fff" />
+                                <Text style={styles.actionButtonText}>Download PDF</Text>
+                            </>
+                        )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.shareButton}
+                        onPress={sharePdf}
+                        disabled={loading}
+                    >
+                        <Feather name="share-2" size={18} color="#fff" />
+                        <Text style={styles.actionButtonText}>Share</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>
+                        This is a computer-generated document.
+                    </Text>
+                    <Text style={styles.footerText}>
+                        No signature is required.
+                    </Text>
+                </View>
+            </ScrollView>
         </View>
     );
 }
@@ -408,97 +488,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#f5f5f5',
         paddingTop: 25,
-    },
-    filterContainer: {
-        padding: 16,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
-    },
-    filterLabel: {
-        fontSize: 14,
-        color: '#6b7280',
-        marginBottom: 8,
-    },
-    filterButtons: {
-        flexDirection: 'row',
-    },
-    filterButton: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        marginRight: 8,
-        backgroundColor: '#f3f4f6',
-    },
-    filterButtonActive: {
-        backgroundColor: '#4f46e5',
-    },
-    filterButtonText: {
-        fontSize: 14,
-        color: '#4b5563',
-    },
-    filterButtonTextActive: {
-        fontSize: 14,
-        color: '#fff',
-        fontWeight: '500',
-    },
-    payslipsList: {
-        paddingBottom: 20,
-    },
-    payslipItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
-    },
-    payslipIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 8,
-        backgroundColor: '#ede9fe',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    payslipContent: {
-        flex: 1,
-    },
-    payslipTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#111827',
-    },
-    payslipDate: {
-        fontSize: 12,
-        color: '#6b7280',
-        marginTop: 2,
-    },
-    payslipAmountContainer: {
-        alignItems: 'flex-end',
-        marginRight: 12,
-    },
-    payslipAmount: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#111827',
-    },
-    payslipStatusContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 2,
-    },
-    payslipStatusDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: '#10b981',
-        marginRight: 4,
-    },
-    payslipStatus: {
-        fontSize: 12,
-        color: '#10b981',
     },
     payslipDetailContainer: {
         flex: 1,
@@ -531,19 +520,84 @@ const styles = StyleSheet.create({
     },
     payslipDetailCard: {
         margin: 16,
-        padding: 20,
         backgroundColor: '#fff',
         borderRadius: 12,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowRadius: 4,
+        elevation: 3,
+        overflow: 'hidden',
+    },
+    netPayCard: {
+        padding: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    netPayLabel: {
+        fontSize: 14,
+        color: 'rgba(255, 255, 255, 0.8)',
+        marginBottom: 4,
+    },
+    netPayValue: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    netPayIcon: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    employeeInfoCard: {
+        padding: 16,
+        backgroundColor: '#f9fafb',
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    employeeInfoRow: {
+        flexDirection: 'row',
+        marginBottom: 12,
+    },
+    employeeInfoItem: {
+        flex: 1,
+    },
+    employeeInfoLabel: {
+        fontSize: 12,
+        color: '#6b7280',
+        marginBottom: 2,
+    },
+    employeeInfoValue: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#111827',
+    },
+    payslipDetailSection: {
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    payslipDetailSectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#111827',
+        marginLeft: 8,
     },
     payslipDetailRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
     },
     payslipDetailLabel: {
         fontSize: 14,
@@ -554,23 +608,13 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#111827',
     },
-    payslipDetailSection: {
-        marginTop: 16,
-        paddingTop: 16,
-        borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
-    },
-    payslipDetailSectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#111827',
-        marginBottom: 8,
-    },
     payslipDetailTotal: {
         marginTop: 8,
         paddingTop: 8,
-        borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
+        borderBottomWidth: 0,
+        backgroundColor: '#f9fafb',
+        padding: 8,
+        borderRadius: 6,
     },
     payslipDetailTotalLabel: {
         fontSize: 14,
@@ -586,189 +630,52 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         margin: 16,
+        marginTop: 8,
     },
-    viewPdfButton: {
+    downloadButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#4f46e5',
         borderRadius: 8,
-        padding: 12,
+        padding: 14,
         flex: 1,
         marginRight: 8,
-    },
-    viewPdfButtonText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#fff',
-        marginLeft: 8,
+        shadowColor: '#4f46e5',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
     },
     shareButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#4f46e5',
+        backgroundColor: '#7c3aed',
         borderRadius: 8,
-        padding: 12,
+        padding: 14,
         flex: 1,
         marginLeft: 8,
+        shadowColor: '#7c3aed',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    shareButtonText: {
+    actionButtonText: {
         fontSize: 14,
         fontWeight: '600',
         color: '#fff',
         marginLeft: 8,
     },
-    pdfViewerContainer: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    pdfContainer: {
-        flex: 1,
-        backgroundColor: '#fff',
-        margin: 16,
-        borderRadius: 12,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-    pdfHeader: {
+    footer: {
         padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
-        backgroundColor: '#f9fafb',
-    },
-    pdfHeaderTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#111827',
-        textAlign: 'center',
-    },
-    pdfContent: {
-        flex: 1,
-        padding: 16,
-    },
-    pdfPlaceholder: {
-        backgroundColor: '#fff',
-        borderRadius: 4,
-        padding: 16,
-        minHeight: 500,
-    },
-    pdfCompanyHeader: {
         alignItems: 'center',
-        marginBottom: 24,
+        marginBottom: 20,
     },
-    pdfCompanyName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#111827',
-        marginBottom: 4,
-    },
-    pdfDocumentTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#4f46e5',
-        marginBottom: 4,
-    },
-    pdfPeriod: {
-        fontSize: 14,
-        color: '#6b7280',
-    },
-    pdfEmployeeInfo: {
-        flexDirection: 'row',
-        marginBottom: 24,
-        borderWidth: 1,
-        borderColor: '#f3f4f6',
-        borderRadius: 4,
-        padding: 12,
-    },
-    pdfInfoColumn: {
-        flex: 1,
-    },
-    pdfInfoLabel: {
+    footerText: {
         fontSize: 12,
         color: '#6b7280',
-        marginBottom: 2,
-    },
-    pdfInfoValue: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#111827',
-        marginBottom: 8,
-    },
-    pdfTable: {
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: '#f3f4f6',
-        borderRadius: 4,
-    },
-    pdfTableHeader: {
-        flexDirection: 'row',
-        backgroundColor: '#f9fafb',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
-    },
-    pdfTableHeaderText: {
-        fontWeight: '600',
-        color: '#111827',
-    },
-    pdfTableRow: {
-        flexDirection: 'row',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
-    },
-    pdfTableCell: {
-        flex: 1,
-        padding: 8,
-        fontSize: 14,
-        color: '#4b5563',
-    },
-    pdfTableTotal: {
-        backgroundColor: '#f9fafb',
-    },
-    pdfTableTotalText: {
-        fontWeight: '600',
-        color: '#111827',
-    },
-    pdfNetPay: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#4f46e5',
-        padding: 16,
-        borderRadius: 4,
-        marginTop: 16,
-    },
-    pdfNetPayLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#fff',
-    },
-    pdfNetPayAmount: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#fff',
-    },
-    pdfActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        padding: 16,
-        borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
-        backgroundColor: '#f9fafb',
-    },
-    pdfActionButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 8,
-    },
-    pdfActionText: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#4f46e5',
-        marginLeft: 8,
+        textAlign: 'center',
     },
 });

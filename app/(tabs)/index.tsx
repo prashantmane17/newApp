@@ -264,12 +264,12 @@ export default function LoginScreen() {
         >Login</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.forgotPasswordContainer}
         onPress={handleForgotPassword}
       >
         <Text style={styles.forgotPasswordText}>I forgot my password</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </>
   );
 
@@ -426,7 +426,7 @@ export default function LoginScreen() {
   );
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={{ flex: 1, marginTop: 20 }}>
+      <View style={{ flex: 1, marginTop: 35, backgroundColor: "white", }}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}

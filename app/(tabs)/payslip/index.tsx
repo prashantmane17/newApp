@@ -1,18 +1,31 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from "react-native"
 import { Feather } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function HomeScreen() {
     const router = useRouter();
+    const [empSalary, setEmpSalary] = useState<any>({});
+    const [payslips, setPayslips] = useState<any>([]);
     const loadSalary = async () => {
         const response = await fetch("http://192.168.1.25:8080/employee-salary-Details-mobile", {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
         });
-        const data = await response.json()
-        console.log("resss----", data)
+        if (response.ok) {
+            const data = await response.json()
+            setEmpSalary(data)
+        }
+        const payslipResponse = await fetch("http://192.168.1.25:8080/employee-Payslip-Details-mobile", {
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+        });
+        if (payslipResponse.ok) {
+            const paySlipData = await payslipResponse.json()
+            setPayslips(paySlipData.payrunData)
+        }
     }
     useEffect(() => {
         loadSalary();
@@ -30,19 +43,19 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.salaryCard}>
-                <Text style={styles.salaryLabel}>Net Salary - March 2025</Text>
-                <Text style={styles.salaryAmount}>₹4,250.00</Text>
+                <Text style={styles.salaryLabel}>Net Salary</Text>
+                <Text style={styles.salaryAmount}>₹{empSalary?.monthlyCTC}</Text>
                 <View style={styles.salaryDetails}>
                     <View style={styles.salaryItem}>
                         <Text style={styles.salaryItemLabel}>Gross</Text>
-                        <Text style={styles.salaryItemValue}>₹5,000.00</Text>
+                        <Text style={styles.salaryItemValue}>₹{empSalary?.grossPay}</Text>
                     </View>
                     <View style={styles.salaryItem}>
                         <Text style={styles.salaryItemLabel}>Deductions</Text>
-                        <Text style={styles.salaryItemValue}>₹750.00</Text>
+                        <Text style={styles.salaryItemValue}>₹{empSalary?.deductionAmt}</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.viewDetailsButton} onPress={() => router.push("/(tabs)/payslip/payslips")}>
+                <TouchableOpacity style={styles.viewDetailsButton} onPress={() => router.push(`/(tabs)/payslip/payslips?data=${encodeURIComponent(JSON.stringify(empSalary))}`)}>
                     <Text style={styles.viewDetailsText}>View Salary</Text>
                     <Feather name="chevron-right" size={16} color="#4f46e5" />
                 </TouchableOpacity>
@@ -50,22 +63,33 @@ export default function HomeScreen() {
 
             <View style={styles.headerView}>
                 <Text style={styles.sectionTitle}>Recent Activity</Text>
-                <TouchableOpacity style={styles.viewSlip} onPress={() => router.push("/(tabs)/payslip/allPayslips")}>
-                    <Text style={[{ color: "white" }]} >View Payslips</Text> </TouchableOpacity>
+                <TouchableOpacity style={styles.viewSlip} onPress={() => router.push("/(tabs)/payslip/payslipModal")}>
+                    <Text style={[{ color: "white" }]} >View Payslips</Text>
+                </TouchableOpacity>
             </View>
 
 
             <View style={styles.activityList}>
-                <View style={styles.activityItem}>
-                    <View style={styles.activityIconContainer}>
-                        <Feather name="file-text" size={20} color="#4f46e5" />
-                    </View>
-                    <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>March 2025 Payslip</Text>
-                        <Text style={styles.activityDate}>March 31, 2025</Text>
-                    </View>
-                    <Feather name="chevron-right" size={20} color="#9ca3af" />
-                </View>
+                {payslips.map((item: any) => {
+
+                    return (
+                        <TouchableOpacity style={styles.activityItem} key={item.id}>
+                            {/* <TouchableOpacity style={styles.activityItem} key={item.id}
+                            onPress={() => router.push({
+                                pathname: "/(tabs)/payslip/payslipModal",
+                                params: { email: item.email, salMonth: item.payMonth }
+                            })}> */}
+                            <View style={styles.activityIconContainer}>
+                                <Feather name="file-text" size={20} color="#4f46e5" />
+                            </View>
+                            <View style={styles.activityContent}>
+                                <Text style={styles.activityTitle}>{item.payMonth} Payslip</Text>
+                                <Text style={styles.activityDate}>₹{item.monthCtc}</Text>
+                            </View>
+                            <Feather name="chevron-right" size={20} color="#9ca3af" />
+                        </TouchableOpacity>
+                    )
+                })}
             </View>
         </ScrollView >
     )

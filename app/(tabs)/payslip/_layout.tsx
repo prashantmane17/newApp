@@ -18,11 +18,19 @@ export default function MessagesLayout() {
                     headerBackTitle: 'Back'
                 }}
             />
-          
+
             <Stack.Screen
                 name="allPayslips"
                 options={{
                     title: 'allpayslips',
+                    headerShown: false,
+                    headerBackTitle: 'Back'
+                }}
+            />
+            <Stack.Screen
+                name="payslipModal"
+                options={{
+                    title: 'payslipModal',
                     headerShown: false,
                     headerBackTitle: 'Back'
                 }}
