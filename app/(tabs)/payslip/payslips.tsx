@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Image, Share, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 // Sample data for payslips - expanded to show all months
 const payslipsData = [
@@ -9,7 +10,7 @@ const payslipsData = [
         month: 'March',
         year: '2025',
         date: 'March 31, 2025',
-        amount: '$4,250.00',
+        amount: '₹4,250.00',
         status: 'Paid',
     },
     {
@@ -17,7 +18,7 @@ const payslipsData = [
         month: 'February',
         year: '2025',
         date: 'February 28, 2025',
-        amount: '$4,250.00',
+        amount: '₹4,250.00',
         status: 'Paid',
     },
     {
@@ -25,7 +26,7 @@ const payslipsData = [
         month: 'January',
         year: '2025',
         date: 'January 31, 2025',
-        amount: '$4,250.00',
+        amount: '₹4,250.00',
         status: 'Paid',
     },
     {
@@ -33,7 +34,7 @@ const payslipsData = [
         month: 'December',
         year: '2024',
         date: 'December 31, 2024',
-        amount: '$4,100.00',
+        amount: '₹4,100.00',
         status: 'Paid',
     },
     {
@@ -41,7 +42,7 @@ const payslipsData = [
         month: 'November',
         year: '2024',
         date: 'November 30, 2024',
-        amount: '$4,100.00',
+        amount: '₹4,100.00',
         status: 'Paid',
     },
     {
@@ -49,7 +50,7 @@ const payslipsData = [
         month: 'October',
         year: '2024',
         date: 'October 31, 2024',
-        amount: '$4,100.00',
+        amount: '₹4,100.00',
         status: 'Paid',
     },
     {
@@ -57,7 +58,7 @@ const payslipsData = [
         month: 'September',
         year: '2024',
         date: 'September 30, 2024',
-        amount: '$4,100.00',
+        amount: '₹4,100.00',
         status: 'Paid',
     },
     {
@@ -65,7 +66,7 @@ const payslipsData = [
         month: 'August',
         year: '2024',
         date: 'August 31, 2024',
-        amount: '$4,100.00',
+        amount: '₹4,100.00',
         status: 'Paid',
     },
     {
@@ -73,7 +74,7 @@ const payslipsData = [
         month: 'July',
         year: '2024',
         date: 'July 31, 2024',
-        amount: '$4,100.00',
+        amount: '₹4,100.00',
         status: 'Paid',
     },
     {
@@ -81,7 +82,7 @@ const payslipsData = [
         month: 'June',
         year: '2024',
         date: 'June 30, 2024',
-        amount: '$4,000.00',
+        amount: '₹4,000.00',
         status: 'Paid',
     },
     {
@@ -89,7 +90,7 @@ const payslipsData = [
         month: 'May',
         year: '2024',
         date: 'May 31, 2024',
-        amount: '$4,000.00',
+        amount: '₹4,000.00',
         status: 'Paid',
     },
     {
@@ -97,7 +98,7 @@ const payslipsData = [
         month: 'April',
         year: '2024',
         date: 'April 30, 2024',
-        amount: '$4,000.00',
+        amount: '₹4,000.00',
         status: 'Paid',
     },
 ];
@@ -106,6 +107,7 @@ export default function PayslipsScreen() {
     const [selectedPayslip, setSelectedPayslip] = useState(payslipsData[1]);
     const [showPdf, setShowPdf] = useState(false);
     const [filterYear, setFilterYear] = useState('All');
+    const router = useRouter();
 
     // Filter payslips based on selected year
     const filteredPayslips = filterYear === 'All'
@@ -197,19 +199,19 @@ export default function PayslipsScreen() {
                         </View>
                         <View style={styles.pdfTableRow}>
                             <Text style={styles.pdfTableCell}>Basic Salary</Text>
-                            <Text style={styles.pdfTableCell}>$4,000.00</Text>
+                            <Text style={styles.pdfTableCell}>₹4,000.00</Text>
                         </View>
                         <View style={styles.pdfTableRow}>
                             <Text style={styles.pdfTableCell}>Bonus</Text>
-                            <Text style={styles.pdfTableCell}>$500.00</Text>
+                            <Text style={styles.pdfTableCell}>₹500.00</Text>
                         </View>
                         <View style={styles.pdfTableRow}>
                             <Text style={styles.pdfTableCell}>Overtime</Text>
-                            <Text style={styles.pdfTableCell}>$500.00</Text>
+                            <Text style={styles.pdfTableCell}>₹500.00</Text>
                         </View>
                         <View style={[styles.pdfTableRow, styles.pdfTableTotal]}>
                             <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>Total Earnings</Text>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>$5,000.00</Text>
+                            <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>₹5,000.00</Text>
                         </View>
                     </View>
 
@@ -220,19 +222,19 @@ export default function PayslipsScreen() {
                         </View>
                         <View style={styles.pdfTableRow}>
                             <Text style={styles.pdfTableCell}>Income Tax</Text>
-                            <Text style={styles.pdfTableCell}>$500.00</Text>
+                            <Text style={styles.pdfTableCell}>₹500.00</Text>
                         </View>
                         <View style={styles.pdfTableRow}>
                             <Text style={styles.pdfTableCell}>Health Insurance</Text>
-                            <Text style={styles.pdfTableCell}>$150.00</Text>
+                            <Text style={styles.pdfTableCell}>₹150.00</Text>
                         </View>
                         <View style={styles.pdfTableRow}>
                             <Text style={styles.pdfTableCell}>Retirement</Text>
-                            <Text style={styles.pdfTableCell}>$100.00</Text>
+                            <Text style={styles.pdfTableCell}>₹100.00</Text>
                         </View>
                         <View style={[styles.pdfTableRow, styles.pdfTableTotal]}>
                             <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>Total Deductions</Text>
-                            <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>$750.00</Text>
+                            <Text style={[styles.pdfTableCell, styles.pdfTableTotalText]}>₹750.00</Text>
                         </View>
                     </View>
 
@@ -279,7 +281,7 @@ export default function PayslipsScreen() {
                     <ScrollView style={styles.payslipDetailContainer}>
                         <TouchableOpacity
                             style={styles.backButton}
-                            onPress={() => setSelectedPayslip(payslipsData[0])}
+                            onPress={() => router.back()}
                         >
                             <Feather name="arrow-left" size={20} color="#4f46e5" />
                             <Text style={styles.backButtonText}>Back to Payslips</Text>
@@ -302,19 +304,19 @@ export default function PayslipsScreen() {
                                 <Text style={styles.payslipDetailSectionTitle}>Earnings</Text>
                                 <View style={styles.payslipDetailRow}>
                                     <Text style={styles.payslipDetailLabel}>Basic Salary</Text>
-                                    <Text style={styles.payslipDetailValue}>$4,000.00</Text>
+                                    <Text style={styles.payslipDetailValue}>₹4,000.00</Text>
                                 </View>
                                 <View style={styles.payslipDetailRow}>
                                     <Text style={styles.payslipDetailLabel}>Bonus</Text>
-                                    <Text style={styles.payslipDetailValue}>$500.00</Text>
+                                    <Text style={styles.payslipDetailValue}>₹500.00</Text>
                                 </View>
                                 <View style={styles.payslipDetailRow}>
                                     <Text style={styles.payslipDetailLabel}>Overtime</Text>
-                                    <Text style={styles.payslipDetailValue}>$500.00</Text>
+                                    <Text style={styles.payslipDetailValue}>₹500.00</Text>
                                 </View>
                                 <View style={[styles.payslipDetailRow, styles.payslipDetailTotal]}>
                                     <Text style={styles.payslipDetailTotalLabel}>Total Earnings</Text>
-                                    <Text style={styles.payslipDetailTotalValue}>$5,000.00</Text>
+                                    <Text style={styles.payslipDetailTotalValue}>₹5,000.00</Text>
                                 </View>
                             </View>
 
@@ -322,19 +324,19 @@ export default function PayslipsScreen() {
                                 <Text style={styles.payslipDetailSectionTitle}>Deductions</Text>
                                 <View style={styles.payslipDetailRow}>
                                     <Text style={styles.payslipDetailLabel}>Income Tax</Text>
-                                    <Text style={styles.payslipDetailValue}>$500.00</Text>
+                                    <Text style={styles.payslipDetailValue}>₹500.00</Text>
                                 </View>
                                 <View style={styles.payslipDetailRow}>
                                     <Text style={styles.payslipDetailLabel}>Health Insurance</Text>
-                                    <Text style={styles.payslipDetailValue}>$150.00</Text>
+                                    <Text style={styles.payslipDetailValue}>₹150.00</Text>
                                 </View>
                                 <View style={styles.payslipDetailRow}>
                                     <Text style={styles.payslipDetailLabel}>Retirement</Text>
-                                    <Text style={styles.payslipDetailValue}>$100.00</Text>
+                                    <Text style={styles.payslipDetailValue}>₹100.00</Text>
                                 </View>
                                 <View style={[styles.payslipDetailRow, styles.payslipDetailTotal]}>
                                     <Text style={styles.payslipDetailTotalLabel}>Total Deductions</Text>
-                                    <Text style={styles.payslipDetailTotalValue}>$750.00</Text>
+                                    <Text style={styles.payslipDetailTotalValue}>₹750.00</Text>
                                 </View>
                             </View>
                         </View>
@@ -348,13 +350,13 @@ export default function PayslipsScreen() {
                                 <Text style={styles.viewPdfButtonText}>View PDF</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity
+                            {/* <TouchableOpacity
                                 style={styles.shareButton}
                                 onPress={handleSharePayslip}
                             >
                                 <Feather name="share-2" size={16} color="#fff" />
                                 <Text style={styles.shareButtonText}>Share</Text>
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                         </View>
                     </ScrollView>
                 )
@@ -405,6 +407,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+        paddingTop: 25,
     },
     filterContainer: {
         padding: 16,

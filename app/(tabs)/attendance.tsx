@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from "react-native"
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, StatusBar } from "react-native"
 import { Feather } from "@expo/vector-icons"
+import { parse, getDate } from 'date-fns';
 
 // Generate attendance data for a specific month and year
 const generateAttendanceData = (month: number, year: number) => {
@@ -219,10 +220,18 @@ export default function AttendanceScreen() {
         // Create array of date cells
         const dateCells = Array.from({ length: daysInMonth }, (_, i) => {
             const date = i + 1
-            const dateData = attendanceData.find((item) => new Date(item.date).getDate() === date)
+            const parsedDate = (rawDate: string) => {
+                const day = parse(rawDate, 'MMMM d, yyyy', new Date());
+                return getDate(day);
+            }
 
-            const status = dateData?.status || "Unknown"
+            const dateData = attendanceData.find((item) => parsedDate(item.date) === date)
 
+            // const status = dateData?.status || "Unknown"
+            const status = "Unknown"
+
+
+            // console.log("satays------", attendanceData)
             return (
                 <View key={`date-${date}`} style={[styles.calendarDate, status === "Weekend" && styles.calendarWeekend]}>
                     <Text style={styles.calendarDateText}>{date}</Text>
@@ -235,6 +244,7 @@ export default function AttendanceScreen() {
 
         return (
             <View style={styles.calendarContainer}>
+
                 <View style={styles.calendarHeader}>
                     <Text style={styles.calendarTitle}>
                         {getMonthName(currentMonth)} {currentYear}
@@ -278,6 +288,7 @@ export default function AttendanceScreen() {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="white" />
             <View style={styles.header}>
                 <View style={styles.monthSelector}>
                     <TouchableOpacity style={styles.monthArrow} onPress={goToPreviousMonth}>
@@ -309,19 +320,19 @@ export default function AttendanceScreen() {
             <View style={styles.summary}>
                 <View style={styles.summaryItem}>
                     <Text style={styles.summaryValue}>{summary.present}</Text>
-                    <Text style={styles.summaryLabel}>Present</Text>
+                    <Text style={[styles.summaryLabel, { color: "#10b981" }]}>Present</Text>
                 </View>
                 <View style={styles.summaryItem}>
                     <Text style={styles.summaryValue}>{summary.late}</Text>
-                    <Text style={styles.summaryLabel}>Late</Text>
+                    <Text style={[styles.summaryLabel, { color: "#f59e0b" }]}>Late</Text>
                 </View>
                 <View style={styles.summaryItem}>
                     <Text style={styles.summaryValue}>{summary.absent}</Text>
-                    <Text style={styles.summaryLabel}>Absent</Text>
+                    <Text style={[styles.summaryLabel, { color: "#ef4444" }]}>Absent</Text>
                 </View>
                 <View style={styles.summaryItem}>
                     <Text style={styles.summaryValue}>{summary.leave}</Text>
-                    <Text style={styles.summaryLabel}>Leave</Text>
+                    <Text style={[styles.summaryLabel, { color: "#6366f1" }]}>Leave</Text>
                 </View>
             </View>
 
@@ -343,6 +354,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#f5f5f5",
+        paddingTop: 30,
     },
     header: {
         flexDirection: "row",
@@ -466,6 +478,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 2,
         elevation: 2,
+        paddingTop: 10,
     },
     calendarHeader: {
         padding: 16,

@@ -85,7 +85,7 @@ export default function LoginScreen() {
     const handleLogin = async () => {
         setIsLoggingIn(true);
         try {
-            const response = await fetch("https://www.portstay.com/employee-login-mobile?workinguserName=" + email, {
+            const response = await fetch("http://192.168.1.25:8080/employee-login-mobile?workinguserName=" + email, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
             });
@@ -93,7 +93,7 @@ export default function LoginScreen() {
             formData.append("username", email);
             formData.append("password", password);
 
-            const passwordRes = await fetch("https://www.portstay.com/login-user", {
+            const passwordRes = await fetch("http://192.168.1.25:8080/login-user", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: formData.toString(),
@@ -103,7 +103,7 @@ export default function LoginScreen() {
             if (response.ok) {
                 if (data.validated) {
                     try {
-                        const homeResponse = await fetch(`https://www.portstay.com//login-user-mobile?username=${encodeURIComponent(email)}`, {
+                        const homeResponse = await fetch(`http://192.168.1.25:8080//login-user-mobile?username=${encodeURIComponent(email)}`, {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
@@ -113,7 +113,7 @@ export default function LoginScreen() {
                             const homdata = await homeResponse.json();
                         }
                         else {
-                            const companyResponse = await fetch(`https://www.portstay.com/company-home_mobile?username=${encodeURIComponent(email)}`, {
+                            const companyResponse = await fetch(`http://192.168.1.25:8080/company-home_mobile?username=${encodeURIComponent(email)}`, {
                                 method: "GET",
                                 headers: {
                                     "Content-Type": "application/json",

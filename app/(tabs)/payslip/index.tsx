@@ -1,14 +1,28 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native"
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from "react-native"
 import { Feather } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
+import { useEffect } from "react";
 
 export default function HomeScreen() {
     const router = useRouter();
+    const loadSalary = async () => {
+        const response = await fetch("http://192.168.1.25:8080/employee-salary-Details-mobile", {
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+        });
+        const data = await response.json()
+        console.log("resss----", data)
+    }
+    useEffect(() => {
+        loadSalary();
+    }, [])
     return (
         <ScrollView style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="white" />
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.name}>Payslip and Attendance</Text>
+                    <Text style={styles.name}>Payroll </Text>
                 </View>
                 <TouchableOpacity style={styles.profileButton}>
                     <Feather name="user" size={24} color="#4f46e5" />
@@ -17,60 +31,29 @@ export default function HomeScreen() {
 
             <View style={styles.salaryCard}>
                 <Text style={styles.salaryLabel}>Net Salary - March 2025</Text>
-                <Text style={styles.salaryAmount}>$4,250.00</Text>
+                <Text style={styles.salaryAmount}>₹4,250.00</Text>
                 <View style={styles.salaryDetails}>
                     <View style={styles.salaryItem}>
                         <Text style={styles.salaryItemLabel}>Gross</Text>
-                        <Text style={styles.salaryItemValue}>$5,000.00</Text>
+                        <Text style={styles.salaryItemValue}>₹5,000.00</Text>
                     </View>
                     <View style={styles.salaryItem}>
                         <Text style={styles.salaryItemLabel}>Deductions</Text>
-                        <Text style={styles.salaryItemValue}>$750.00</Text>
+                        <Text style={styles.salaryItemValue}>₹750.00</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.viewDetailsButton} >
-                    <Text style={styles.viewDetailsText}>View Details</Text>
+                <TouchableOpacity style={styles.viewDetailsButton} onPress={() => router.push("/(tabs)/payslip/payslips")}>
+                    <Text style={styles.viewDetailsText}>View Salary</Text>
                     <Feather name="chevron-right" size={16} color="#4f46e5" />
                 </TouchableOpacity>
             </View>
 
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-
-            <View style={styles.quickActions}>
-                <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/(tabs)/payslip/payslips")}>
-                    <View style={styles.actionIconContainer}>
-                        <Feather name="file-text" size={24} color="#4f46e5" />
-                    </View>
-                    <Text style={styles.actionTitle}>Payslips</Text>
-                    <Text style={styles.actionDescription}>View and download your payslips</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/(tabs)/payslip/attendance")}>
-                    <View style={styles.actionIconContainer} >
-                        <Feather name="calendar" size={24} color="#4f46e5" />
-                    </View>
-                    <Text style={styles.actionTitle}>Attendance</Text>
-                    <Text style={styles.actionDescription}>Check your attendance records</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.actionCard}>
-                    <View style={styles.actionIconContainer}>
-                        <Feather name="clock" size={24} color="#4f46e5" />
-                    </View>
-                    <Text style={styles.actionTitle}>Time Off</Text>
-                    <Text style={styles.actionDescription}>Request and manage leave</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.actionCard}>
-                    <View style={styles.actionIconContainer}>
-                        <Feather name="help-circle" size={24} color="#4f46e5" />
-                    </View>
-                    <Text style={styles.actionTitle}>Support</Text>
-                    <Text style={styles.actionDescription}>Get help with payroll issues</Text>
-                </TouchableOpacity>
+            <View style={styles.headerView}>
+                <Text style={styles.sectionTitle}>Recent Activity</Text>
+                <TouchableOpacity style={styles.viewSlip} onPress={() => router.push("/(tabs)/payslip/allPayslips")}>
+                    <Text style={[{ color: "white" }]} >View Payslips</Text> </TouchableOpacity>
             </View>
 
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
 
             <View style={styles.activityList}>
                 <View style={styles.activityItem}>
@@ -83,30 +66,8 @@ export default function HomeScreen() {
                     </View>
                     <Feather name="chevron-right" size={20} color="#9ca3af" />
                 </View>
-
-                <View style={styles.activityItem}>
-                    <View style={styles.activityIconContainer}>
-                        <Feather name="calendar" size={20} color="#4f46e5" />
-                    </View>
-                    <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>Attendance Updated</Text>
-                        <Text style={styles.activityDate}>March 30, 2025</Text>
-                    </View>
-                    <Feather name="chevron-right" size={20} color="#9ca3af" />
-                </View>
-
-                <View style={styles.activityItem}>
-                    <View style={styles.activityIconContainer}>
-                        <Feather name="clock" size={20} color="#4f46e5" />
-                    </View>
-                    <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>Leave Request Approved</Text>
-                        <Text style={styles.activityDate}>March 28, 2025</Text>
-                    </View>
-                    <Feather name="chevron-right" size={20} color="#9ca3af" />
-                </View>
             </View>
-        </ScrollView>
+        </ScrollView >
     )
 }
 
@@ -114,6 +75,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#f5f5f5",
+        paddingTop: 10,
     },
     header: {
         flexDirection: "row",
@@ -196,6 +158,12 @@ const styles = StyleSheet.create({
         color: "#4f46e5",
         marginRight: 4,
     },
+    headerView: {
+        flexDirection: 'row',
+        justifyContent: "space-between",
+        alignItems: "center",
+
+    },
     sectionTitle: {
         fontSize: 18,
         fontWeight: "bold",
@@ -203,6 +171,13 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         marginTop: 24,
         marginBottom: 12,
+    },
+    viewSlip: {
+        marginHorizontal: 16,
+        backgroundColor: "#4f46e5",
+        padding: 3,
+        paddingHorizontal: 10,
+        borderRadius: 10,
     },
     quickActions: {
         flexDirection: "row",

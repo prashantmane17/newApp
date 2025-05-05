@@ -45,9 +45,9 @@ export default function ChatInterface() {
   const friendsList = async () => {
     try {
       setLoading(true); // Start loading
-      let url = "https://www.portstay.com/employee.chatUsers-mobile"
+      let url = "http://192.168.1.25:8080/employee.chatUsers-mobile"
       if (sessionData?.role === "Superadmin") {
-        url = "https://www.portstay.com/superadmin.chatUsers-Mobile"
+        url = "http://192.168.1.25:8080/superadmin.chatUsers-Mobile"
       }
       const response = await fetch(url, {
         method: "GET",
@@ -138,9 +138,9 @@ export default function ChatInterface() {
           <View style={styles.headerInfo}>
             <Text style={styles.headerSubtitle}>Messages & Groups</Text>
           </View>
-          <TouchableOpacity onPress={handleLogoutPress} disabled={isLoggingOut}>
+          {/* <TouchableOpacity onPress={handleLogoutPress} disabled={isLoggingOut}>
             <LogOut size={20} color='red' />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
         </View>
       </View>
@@ -196,7 +196,7 @@ export default function ChatInterface() {
             <TouchableOpacity style={styles.navItem} onPress={() => router.push({
               pathname: '/(tabs)/msgDashboard/messages/companyChat',
               params: {
-                id: companyTeam?.portId || companyTeam?.id || 111, name: companyTeam?.name || "User", avatar: 'https://www.portstay.com/resources/img/Profile/default_group_image.png'
+                id: companyTeam?.portId || companyTeam?.id || 111, name: companyTeam?.name || "User", avatar: 'http://192.168.1.25:8080/resources/img/Profile/default_group_image.png'
               }
             })}>
               <Users color="#fff" size={24} />
@@ -208,10 +208,10 @@ export default function ChatInterface() {
               <TouchableOpacity key={user.userId} style={styles.chatPreview}
                 onPress={() => router.push({
                   pathname: '/(tabs)/msgDashboard/messages/chat',
-                  params: { id: user.id, name: user.name, avatar: user?.profile_pic ? `https://www.portstay.com/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }
+                  params: { id: user.id, name: user.name, avatar: user?.profile_pic ? `http://192.168.1.25:8080/imageController/${user?.profile_pic}.do` : 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png' }
                 })}>
                 <Image
-                  source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
+                  source={{ uri: 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png' }}
                   style={styles.avatar}
                 />
                 <View style={styles.chatInfo}>
@@ -247,10 +247,10 @@ export default function ChatInterface() {
               <TouchableOpacity key={branch.userId} style={styles.chatPreview}
                 onPress={() => router.push({
                   pathname: '/(tabs)/msgDashboard/messages/chat',
-                  params: { id: branch.id, name: branch.name + " (" + branch.branch + ")", avatar: branch?.profile_pic ? `https://www.portstay.com/imageController/${branch?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_company_image.png' }
+                  params: { id: branch.id, name: branch.name + " (" + branch.branch + ")", avatar: branch?.profile_pic ? `http://192.168.1.25:8080/imageController/${branch?.profile_pic}.do` : 'http://192.168.1.25:8080/resources/img/Profile/default_company_image.png' }
                 })}>
                 <Image
-                  source={{ uri: branch?.profile_pic ? `https://www.portstay.com/imageController/${branch?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_company_image.png' }}
+                  source={{ uri: branch?.profile_pic ? `http://192.168.1.25:8080/imageController/${branch?.profile_pic}.do` : 'http://192.168.1.25:8080/resources/img/Profile/default_company_image.png' }}
                   style={styles.avatar}
                 />
                 <View style={styles.chatInfo}>
@@ -268,10 +268,10 @@ export default function ChatInterface() {
             <TouchableOpacity key={user.userId} style={styles.chatPreview}
               onPress={() => router.push({
                 pathname: '/(tabs)/msgDashboard/messages/chat',
-                params: { id: user.id, name: user.name, avatar: user?.profile_pic ? `https://www.portstay.com/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }
+                params: { id: user.id, name: user.name, avatar: user?.profile_pic ? `http://192.168.1.25:8080/imageController/${user?.profile_pic}.do` : 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png' }
               })}>
               <Image
-                source={{ uri: user?.profile_pic ? `https://www.portstay.com/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
+                source={{ uri: user?.profile_pic ? `http://192.168.1.25:8080/imageController/${user?.profile_pic}.do` : 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png' }}
                 style={styles.avatar}
               />
               <View style={styles.chatInfo}>
@@ -298,10 +298,10 @@ export default function ChatInterface() {
             <TouchableOpacity key={user.id} style={styles.chatPreview}
               onPress={() => router.push({
                 pathname: '/(tabs)/msgDashboard/messages/companyChat',
-                params: { id: user?.id || 111, name: user.name ? user.name : "User", avatar: user?.profile_pic ? `https://www.portstay.com/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_group_image.png' }
+                params: { id: user?.id || 111, name: user.name ? user.name : "User", avatar: user?.profile_pic ? `http://192.168.1.25:8080/imageController/${user?.profile_pic}.do` : 'http://192.168.1.25:8080/resources/img/Profile/default_group_image.png' }
               })}>
               <Image
-                source={{ uri: user?.profile_pic ? `https://www.portstay.com/imageController/${user?.profile_pic}.do` : 'https://www.portstay.com/resources/img/Profile/default_group_image.png' }}
+                source={{ uri: user?.profile_pic ? `http://192.168.1.25:8080/imageController/${user?.profile_pic}.do` : 'http://192.168.1.25:8080/resources/img/Profile/default_group_image.png' }}
                 style={styles.avatar}
               />
               <View style={styles.groupchatInfo}>
@@ -323,7 +323,7 @@ export default function ChatInterface() {
                 params: { companyId: user.userId, empId: sessionData?.loginId, name: user.name }
               })}>
               <Image
-                source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_company_image.png' }}
+                source={{ uri: 'http://192.168.1.25:8080/resources/img/Profile/default_company_image.png' }}
                 style={styles.avatar}
               />
               <View style={styles.chatInfo}>

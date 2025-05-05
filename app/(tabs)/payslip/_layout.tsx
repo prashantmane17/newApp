@@ -18,10 +18,11 @@ export default function MessagesLayout() {
                     headerBackTitle: 'Back'
                 }}
             />
+          
             <Stack.Screen
-                name="attendance"
+                name="allPayslips"
                 options={{
-                    title: 'Attendance',
+                    title: 'allpayslips',
                     headerShown: false,
                     headerBackTitle: 'Back'
                 }}

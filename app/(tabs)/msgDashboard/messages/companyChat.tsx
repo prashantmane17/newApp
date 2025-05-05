@@ -55,7 +55,7 @@ export default function ChatScreen() {
     const friendsList = async () => {
         try {
             setIsLoading(true)
-            const response = await fetch(`https://www.portstay.com/mobile-port_post_list/${id}`, {
+            const response = await fetch(`http://192.168.1.25:8080/mobile-port_post_list/${id}`, {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
@@ -299,7 +299,7 @@ export default function ChatScreen() {
     const sendMessage = async () => {
         if (message.trim()) {
             try {
-                const response = await fetch('https://www.portstay.com/add-port-post-mobile', {
+                const response = await fetch('http://192.168.1.25:8080/add-port-post-mobile', {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -445,7 +445,7 @@ export default function ChatScreen() {
                                 <View style={styles.msgContainer}>
                                     <View>
                                         <Image source={{
-                                            uri: item.postedBy.profile_pic ? `https://www.portstay.com/imageController/${item.postedBy.profile_pic}.do` : "https://www.portstay.com/resources/img/Profile/default_user_image.png"
+                                            uri: item.postedBy.profile_pic ? `http://192.168.1.25:8080/imageController/${item.postedBy.profile_pic}.do` : "http://192.168.1.25:8080/resources/img/Profile/default_user_image.png"
                                         }} style={styles.msgAvatar} />
                                     </View>
 
@@ -457,7 +457,7 @@ export default function ChatScreen() {
                                         <Text style={[styles.messagerName, { color: nameColor }]}>{item.postedBy.fullName}</Text>
                                         {item.post?.images && (
                                             <ImageWithDownload
-                                                imageUrl={`https://www.portstay.com/imageController/${item.post?.images?.imageNames}.do`}
+                                                imageUrl={`http://192.168.1.25:8080/imageController/${item.post?.images?.imageNames}.do`}
                                                 imageName={item.post?.images?.imageNames} />
                                         )}
                                         <Text style={styles.messageText}>{HtmlRenderer(cleanHtml(item.post.postDescription || "--"))}</Text>
