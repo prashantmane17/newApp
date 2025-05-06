@@ -209,16 +209,22 @@ export default function LoginScreen() {
   };
 
   const renderLoginScreen = () => (
-    <>
+
+    <View style={styles.loginContainer}>
+      <View style={styles.crmTextContainer}>
+        <Text style={styles.welcomeText}>Welcome to </Text>
+        {/* <Text style={styles.crmText}>Portstay</Text> */}
+      </View>
       <View style={styles.logoContainer}>
-        <ColorfulSpiral />
+        {/* <ColorfulSpiral /> */}
+        <Image
+          source={require('./../../assets/images/portstayLogo.webp')}
+          style={styles.image}
+          resizeMode="contain"
+        />
       </View>
 
-      <Text style={styles.welcomeText}>Welcome!</Text>
-      <View style={styles.crmTextContainer}>
-        <Text style={styles.toText}>to </Text>
-        <Text style={styles.crmText}>Portstay</Text>
-      </View>
+      {/* <Text style={styles.welcomeText}>Welcome!</Text> */}
 
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Emial</Text>
@@ -232,7 +238,7 @@ export default function LoginScreen() {
             autoCapitalize="none"
           />
           <View style={styles.phoneIconContainer}>
-            <Ionicons name="mail" size={20} color="#7B68EE" />
+            <Ionicons name="mail" size={20} color="#6B7280" />
           </View>
         </View>
       </View>
@@ -252,7 +258,7 @@ export default function LoginScreen() {
               <Ionicons
                 name={showPassword ? "eye" : "eye-off"}
                 size={20}
-                color="#999"
+                color="#6B7280"
               />
             </View>
           </TouchableWithoutFeedback>
@@ -270,7 +276,7 @@ export default function LoginScreen() {
       >
         <Text style={styles.forgotPasswordText}>I forgot my password</Text>
       </TouchableOpacity> */}
-    </>
+    </View>
   );
 
   const renderForgotPasswordScreen = () => (
@@ -426,7 +432,7 @@ export default function LoginScreen() {
   );
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={{ flex: 1, marginTop: 35, backgroundColor: "white", }}>
+      <View style={{ flex: 1, marginTop: 35, backgroundColor: "#15607a", }}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -518,12 +524,22 @@ const styles = StyleSheet.create({
     minHeight: Dimensions.get('window').height - 40
   },
   container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
+
+    backgroundColor: '#15607a',
     alignItems: 'center',
+    // paddingTop: 60,
+    // paddingHorizontal: 20,
+    // paddingBottom: 40,
+
+  },
+  loginContainer: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
     paddingTop: 60,
-    paddingHorizontal: 20,
+    paddingHorizontal: 40,
     paddingBottom: 40,
+    borderRadius: 10,
   },
   backButton: {
     position: 'absolute',
@@ -532,20 +548,23 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   logoContainer: {
-    marginBottom: 20,
+    marginBottom: 30,
     alignItems: 'center',
-    marginTop: 20,
+    // marginTop: 20,
+  },
+  image: {
+    width: 200, height: 50
   },
   welcomeText: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 5,
-    color: '#333333',
+    color: '#000',
   },
   crmTextContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 40,
+    // marginBottom: 40,
   },
   toText: {
     fontSize: 28,
@@ -553,7 +572,7 @@ const styles = StyleSheet.create({
   },
   crmText: {
     fontSize: 28,
-    color: '#7B68EE',
+    color: '#15607a',
     fontWeight: 'bold',
   },
   forgotPasswordDescription: {
@@ -563,18 +582,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   inputContainer: {
+
     width: '100%',
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
-    color: '#666666',
+    color: '#000',
     marginBottom: 5,
   },
   phoneInputWrapper: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: '#7B68EE',
+    borderColor: '#3396f3',
     borderRadius: 10,
     height: 50,
     alignItems: 'center',
@@ -584,15 +604,15 @@ const styles = StyleSheet.create({
   passwordInputWrapper: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: '#3396f3',
     borderRadius: 10,
     height: 50,
     alignItems: 'center',
     paddingHorizontal: 10,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FFFFFF',
   },
   input: {
-    flex: 1,
+    width: 220,
     height: 50,
     fontSize: 16,
     color: '#333333',
@@ -621,8 +641,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   loginButton: {
-    backgroundColor: '#7B68EE',
-    width: '100%',
+    backgroundColor: '#3396f3',
+    width: 150,
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',

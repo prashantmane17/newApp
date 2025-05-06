@@ -42,7 +42,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { SessionProvider, useSession } from '@/context/ContextSession';
 import { useRouter, usePathname } from 'expo-router';
-import { MessageSquare, DollarSign, Settings, User, LogOut } from 'lucide-react-native';
+import { MessageSquare, DollarSign, Settings, User, LogOut, TicketPlus } from 'lucide-react-native';
 
 type RouteType = '/(tabs)/msgDashboard' | '/(tabs)/payroll' | '/(tabs)/settings' | '/(tabs)/profile' | '/(tabs)/logout';
 
