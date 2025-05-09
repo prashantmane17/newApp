@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -8,284 +8,497 @@ import {
     TextInput,
     TouchableOpacity,
     Platform,
+    ActivityIndicator,
+    StatusBar,
+    Alert,
 } from 'react-native';
 import { Calendar, Building2, User, Mail, Phone, Chrome as Home, MapPin, Building, CreditCard, Percent, Lock } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
     const router = useRouter();
-    const [profileData, setProfileData] = useState({
-        name: 'It Mange J',
-        department: 'IT Management',
-        dateOfJoining: '',
-        gender: 'male',
-        dateOfBirth: '',
-        employeeId: '',
-        email: 'it@vivo.com',
+    const [profileData, setProfileData] = useState<any>({
         phone: '',
-        address: '',
-        country: '',
-        state: '',
-        city: '',
-        zipCode: '',
-        accountHolder: '',
-        bankName: '',
-        ifsc: '',
-        accountNumber: '',
-        taxRegime: '',
-        pan: '',
+        address: {
+            area: '',
+            country: '',
+            state: '',
+            city: '',
+            zipCode: '',
+        },
     });
+    const [loading, setLoading] = useState(false);
+    const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
     const SectionTitle = ({ title }: { title: string }) => (
         <Text style={styles.sectionTitle}>{title}</Text>
     );
 
-    const InputField = ({
-        label,
-        value,
-        icon,
-        onChangeText,
-        placeholder = '',
-    }: {
-        label: string;
-        value: string;
-        icon: React.ReactNode;
-        onChangeText: (text: string) => void;
-        placeholder?: string;
-    }) => (
-        <View style={styles.inputContainer}>
-            <View style={styles.labelContainer}>
-                {icon}
-                <Text style={styles.label}>{label}</Text>
-            </View>
-            <TextInput
-                style={styles.input}
-                value={value}
-                onChangeText={onChangeText}
-                placeholder={placeholder}
-                placeholderTextColor="#94A3B8"
-            />
-        </View>
-    );
+    const loadSalary = async () => {
+        setLoading(true);
+        const response = await fetch("http://192.168.1.25:8080/setting-mobile", {
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+            const data = await response.json()
+            console.log("jijojs---", data.userObj)
+            setProfileData(data.userObj)
+        }
+        setLoading(false);
+    }
 
-    const handleSave = () => {
-        // Implement save functionality
+    useEffect(() => {
+        loadSalary();
+    }, [])
+
+    // Custom alert component
+    const SuccessAlert = () => {
+        if (!showSuccessAlert) return null;
+
+        return (
+            <View style={styles.alertOverlay}>
+                <View style={styles.alertContainer}>
+                    <View style={styles.alertIconContainer}>
+                        <View style={styles.alertIconCircle}>
+                            <Text style={styles.alertIconText}>✓</Text>
+                        </View>
+                    </View>
+                    <Text style={styles.alertTitle}>Success!</Text>
+                    <Text style={styles.alertMessage}>Profile updated successfully</Text>
+                    <TouchableOpacity
+                        style={styles.alertButton}
+                        onPress={() => setShowSuccessAlert(false)}
+                    >
+                        <Text style={styles.alertButtonText}>OK</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    };
+
+    const handleSave = async () => {
+        setLoading(true);
+        const formData = new FormData();
+
+        formData.append("doj", profileData.doj);
+        formData.append("gender", profileData.gender);
+        formData.append("empNumber", profileData.empNumber);
+        formData.append("empType", profileData.empType);
+        formData.append("dob", profileData.dob);
+        formData.append("aboutTeam", profileData.aboutTeam);
+        formData.append("phone", profileData.phone);
+        formData.append("accNo", profileData.accNo);
+        formData.append("panNumber", profileData.panNumber);
+        formData.append("bankName", profileData.bankName);
+        formData.append("taxRegime", profileData.taxRegime);
+        formData.append("ifscCode", profileData.ifscCode);
+        formData.append("acHolderName", profileData.acHolderName);
+        formData.append("address.zipcode", profileData.address.zipCode);
+        formData.append("address.city", profileData.address.city);
+        formData.append("address.state", profileData.address.state);
+        formData.append("address.country", profileData.address.country);
+        formData.append("address.area", profileData.address.area);
+        formData.append("email", profileData.email);
+
+        try {
+            const response = await fetch("http://192.168.1.25:8080/update-profile", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+                body: formData,
+            });
+            console.log("respons----", response)
+            const result = await response.json();
+            console.log("Success:", result);
+
+            // Show success alert
+            setShowSuccessAlert(true);
+
+            // Automatically hide the alert after 3 seconds
+            setTimeout(() => {
+                setShowSuccessAlert(false);
+            }, 3000);
+
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            // You could also add an error alert here
+            Alert.alert("Error", "Failed to update profile. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.header}>
-                <View style={styles.headerContent}>
-                    <Text style={styles.title}>Profile</Text>
-                    <TouchableOpacity style={styles.privacyButton} onPress={() => router.push("/(tabs)/msgDashboard/profile/password")}>
-                        <Lock size={16} color="#4F46E5" />
-                        <Text style={styles.privacyButtonText}>Privacy Settings</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+        <View style={styles.mainContainer}>
+            <StatusBar barStyle="light-content" />
+            {/* Success Alert Component */}
+            <SuccessAlert />
 
-            <View style={styles.profileSection}>
-                <View style={styles.avatarContainer}>
-                    <Image
-                        source={{ uri: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80' }}
-                        style={styles.avatar}
-                    />
-                    <TouchableOpacity style={styles.editAvatarButton}>
-                        <Text style={styles.editAvatarText}>Change Photo</Text>
-                    </TouchableOpacity>
+            <ScrollView style={styles.container}>
+                <View style={styles.header}>
+                    <View style={styles.headerContent}>
+                        <Text style={styles.title}>Profile</Text>
+                        <TouchableOpacity style={styles.privacyButton} onPress={() => router.push("/(tabs)/profile/password")}>
+                            <Lock size={16} color="#FFFFFF" />
+                            <Text style={styles.privacyButtonText}>Privacy Settings</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-                <Text style={styles.profileName}>{profileData.name}</Text>
-                <Text style={styles.profileRole}>{profileData.department}</Text>
-            </View>
-
-            <View style={styles.contentContainer}>
-                <SectionTitle title="Basic Information" />
-                <InputField
-                    label="Date of Joining"
-                    value={profileData.dateOfJoining}
-                    icon={<Calendar size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, dateOfJoining: text })}
-                />
-                <InputField
-                    label="Department"
-                    value={profileData.department}
-                    icon={<Building2 size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, department: text })}
-                />
-                <View style={styles.row}>
-                    <View style={styles.genderContainer}>
-                        <View style={styles.labelContainer}>
-                            <User size={20} color="#4F46E5" />
-                            <Text style={styles.label}>Gender</Text>
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#FFFFFF" />
+                    </View>
+                ) : (
+                    <>
+                        <View style={styles.profileSection}>
+                            <View style={styles.avatarContainer}>
+                                <Image
+                                    source={{ uri: 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png' }}
+                                    style={styles.avatar}
+                                />
+                                <TouchableOpacity style={styles.editAvatarButton}>
+                                    <Text style={styles.editAvatarText}>Change Photo</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <Text style={styles.profileName}>{profileData?.name}</Text>
+                            <Text style={styles.profileRole}>{profileData?.aboutMe}</Text>
                         </View>
-                        <View style={styles.genderOptions}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.genderOption,
-                                    profileData.gender === 'male' && styles.genderOptionSelected,
-                                ]}
-                                onPress={() => setProfileData({ ...profileData, gender: 'male' })}
-                            >
-                                <Text
-                                    style={[
-                                        styles.genderOptionText,
-                                        profileData.gender === 'male' && styles.genderOptionTextSelected,
-                                    ]}
-                                >
-                                    Male
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[
-                                    styles.genderOption,
-                                    profileData.gender === 'female' && styles.genderOptionSelected,
-                                ]}
-                                onPress={() => setProfileData({ ...profileData, gender: 'female' })}
-                            >
-                                <Text
-                                    style={[
-                                        styles.genderOptionText,
-                                        profileData.gender === 'female' && styles.genderOptionTextSelected,
-                                    ]}
-                                >
-                                    Female
-                                </Text>
-                            </TouchableOpacity>
+
+                        <View style={styles.contentContainer}>
+                            <SectionTitle title="Basic Information" />
+
+                            {/* Date of Joining */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Date of Joining</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.doj}
+                                    onChangeText={(text) => setProfileData({ ...profileData, doj: text })}
+                                    placeholder="Enter date of joining"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* Department */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Department</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.aboutTeam}
+                                    onChangeText={(text) => setProfileData({ ...profileData, aboutTeam: text })}
+                                    placeholder="Enter department"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* Gender */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Gender</Text>
+                                <View style={styles.genderOptions}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.genderOption,
+                                            profileData?.gender === 'Male' && styles.genderOptionSelected,
+                                        ]}
+                                        onPress={() => setProfileData({ ...profileData, gender: 'Male' })}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.genderOptionText,
+                                                profileData?.gender === 'Male' && styles.genderOptionTextSelected,
+                                            ]}
+                                        >
+                                            Male
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.genderOption,
+                                            profileData?.gender === 'Female' && styles.genderOptionSelected,
+                                        ]}
+                                        onPress={() => setProfileData({ ...profileData, gender: 'Female' })}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.genderOptionText,
+                                                profileData?.gender === 'Female' && styles.genderOptionTextSelected,
+                                            ]}
+                                        >
+                                            Female
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+
+                            {/* Date of Birth */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Date of Birth</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.dob}
+                                    onChangeText={(text) => setProfileData({ ...profileData, dob: text })}
+                                    placeholder="Enter date of birth"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* Employee Type */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Employee Type</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.empType}
+                                    onChangeText={(text) => setProfileData({ ...profileData, empType: text })}
+                                    placeholder="Enter employee type"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* Employee ID */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Employee ID</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.empNumber}
+                                    onChangeText={(text) => setProfileData({ ...profileData, empNumber: text })}
+                                    placeholder="Enter employee ID"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            <SectionTitle title="Contact Information" />
+
+                            {/* Email */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Email</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.email}
+                                    onChangeText={(text) => setProfileData({ ...profileData, email: text })}
+                                    placeholder="Enter your email"
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* Phone */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Phone</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.phone}
+                                    onChangeText={(text) => setProfileData({ ...profileData, phone: text })}
+                                    placeholder="Enter your phone number"
+                                    keyboardType="phone-pad"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* Address */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Address</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.address?.area}
+                                    onChangeText={(text) => setProfileData({
+                                        ...profileData, address: {
+                                            ...profileData.address,
+                                            area: text,
+                                        }
+                                    })}
+                                    placeholder="Enter your address"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={styles.halfWidth}>
+                                    {/* Country */}
+                                    <View style={styles.inputContainer}>
+                                        <Text style={styles.label}>Country</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            value={profileData?.address?.country}
+                                            onChangeText={(text) => setProfileData({
+                                                ...profileData, address: {
+                                                    ...profileData.address,
+                                                    country: text,
+                                                }
+                                            })}
+                                            placeholder="Enter country"
+                                            placeholderTextColor="#94A3B8"
+                                        />
+                                    </View>
+                                </View>
+                                <View style={styles.halfWidth}>
+                                    {/* State */}
+                                    <View style={styles.inputContainer}>
+                                        <Text style={styles.label}>State</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            value={profileData?.address?.state}
+                                            onChangeText={(text) => setProfileData({
+                                                ...profileData, address: {
+                                                    ...profileData.address,
+                                                    state: text,
+                                                }
+                                            })}
+                                            placeholder="Enter state"
+                                            placeholderTextColor="#94A3B8"
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={styles.halfWidth}>
+                                    {/* City */}
+                                    <View style={styles.inputContainer}>
+                                        <Text style={styles.label}>City</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            value={profileData?.address?.city}
+                                            onChangeText={(text) => setProfileData({
+                                                ...profileData, address: {
+                                                    ...profileData.address,
+                                                    city: text,
+                                                }
+                                            })}
+                                            placeholder="Enter city"
+                                            placeholderTextColor="#94A3B8"
+                                        />
+                                    </View>
+                                </View>
+                                <View style={styles.halfWidth}>
+                                    {/* Zip Code */}
+                                    <View style={styles.inputContainer}>
+                                        <Text style={styles.label}>Zip Code</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            value={profileData?.address?.zipCode}
+                                            onChangeText={(text) => setProfileData({
+                                                ...profileData, address: {
+                                                    ...profileData.address,
+                                                    zipCode: text,
+                                                }
+                                            })}
+                                            placeholder="Enter zip code"
+                                            keyboardType="numeric"
+                                            placeholderTextColor="#94A3B8"
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            <SectionTitle title="Banking Information" />
+
+                            {/* Account Holder Name */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Account Holder Name</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.acHolderName}
+                                    onChangeText={(text) => setProfileData({ ...profileData, acHolderName: text })}
+                                    placeholder="Enter account holder name"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* Bank Name */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Bank Name</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.bankName}
+                                    onChangeText={(text) => setProfileData({ ...profileData, bankName: text })}
+                                    placeholder="Enter bank name"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* IFSC */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>IFSC</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.ifscCode}
+                                    onChangeText={(text) => setProfileData({ ...profileData, ifscCode: text })}
+                                    placeholder="Enter IFSC code"
+                                    autoCapitalize="characters"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* Account Number */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Account Number</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.accNo}
+                                    onChangeText={(text) => setProfileData({ ...profileData, accNo: text })}
+                                    placeholder="Enter account number"
+                                    keyboardType="numeric"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* Tax Regime */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>Tax Regime</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.taxRegime}
+                                    onChangeText={(text) => setProfileData({ ...profileData, taxRegime: text })}
+                                    placeholder="Enter tax regime"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            {/* PAN */}
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>PAN</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={profileData?.panNumber}
+                                    onChangeText={(text) => setProfileData({ ...profileData, panNumber: text })}
+                                    placeholder="Enter PAN number"
+                                    autoCapitalize="characters"
+                                    placeholderTextColor="#94A3B8"
+                                />
+                            </View>
+
+                            <View style={styles.buttonContainer}>
+                                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                                    <Text style={styles.saveButtonText}>Save Changes</Text>
+                                </TouchableOpacity>
+
+                            </View>
                         </View>
-                    </View>
-                </View>
-                <InputField
-                    label="Date of Birth"
-                    value={profileData.dateOfBirth}
-                    icon={<Calendar size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, dateOfBirth: text })}
-                />
-                <InputField
-                    label="Employee ID"
-                    value={profileData.employeeId}
-                    icon={<CreditCard size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, employeeId: text })}
-                />
-
-                <SectionTitle title="Contact Information" />
-                <InputField
-                    label="Email"
-                    value={profileData.email}
-                    icon={<Mail size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, email: text })}
-                />
-                <InputField
-                    label="Phone"
-                    value={profileData.phone}
-                    icon={<Phone size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, phone: text })}
-                />
-                <InputField
-                    label="Address"
-                    value={profileData.address}
-                    icon={<Home size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, address: text })}
-                />
-                <View style={styles.row}>
-                    <View style={styles.halfWidth}>
-                        <InputField
-                            label="Country"
-                            value={profileData.country}
-                            icon={<MapPin size={20} color="#4F46E5" />}
-                            onChangeText={(text) => setProfileData({ ...profileData, country: text })}
-                        />
-                    </View>
-                    <View style={styles.halfWidth}>
-                        <InputField
-                            label="State"
-                            value={profileData.state}
-                            icon={<MapPin size={20} color="#4F46E5" />}
-                            onChangeText={(text) => setProfileData({ ...profileData, state: text })}
-                        />
-                    </View>
-                </View>
-                <View style={styles.row}>
-                    <View style={styles.halfWidth}>
-                        <InputField
-                            label="City"
-                            value={profileData.city}
-                            icon={<Building size={20} color="#4F46E5" />}
-                            onChangeText={(text) => setProfileData({ ...profileData, city: text })}
-                        />
-                    </View>
-                    <View style={styles.halfWidth}>
-                        <InputField
-                            label="Zip Code"
-                            value={profileData.zipCode}
-                            icon={<MapPin size={20} color="#4F46E5" />}
-                            onChangeText={(text) => setProfileData({ ...profileData, zipCode: text })}
-                        />
-                    </View>
-                </View>
-
-                <SectionTitle title="Banking Information" />
-                <InputField
-                    label="Account Holder Name"
-                    value={profileData.accountHolder}
-                    icon={<User size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, accountHolder: text })}
-                />
-                <InputField
-                    label="Bank Name"
-                    value={profileData.bankName}
-                    icon={<Building size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, bankName: text })}
-                />
-                <InputField
-                    label="IFSC"
-                    value={profileData.ifsc}
-                    icon={<Building size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, ifsc: text })}
-                />
-                <InputField
-                    label="Account Number"
-                    value={profileData.accountNumber}
-                    icon={<CreditCard size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, accountNumber: text })}
-                />
-                <InputField
-                    label="Tax Regime"
-                    value={profileData.taxRegime}
-                    icon={<Percent size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, taxRegime: text })}
-                />
-                <InputField
-                    label="PAN"
-                    value={profileData.pan}
-                    icon={<CreditCard size={20} color="#4F46E5" />}
-                    onChangeText={(text) => setProfileData({ ...profileData, pan: text })}
-                />
-
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                        <Text style={styles.saveButtonText}>Save Changes</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.closeButton}>
-                        <Text style={styles.closeButtonText}>Close</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        </ScrollView>
+                    </>
+                )}
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    mainContainer: {
+        flex: 1,
+        backgroundColor: '#06607a',
+    },
     container: {
         flex: 1,
-        backgroundColor: '#F8FAFC',
+        backgroundColor: '#06607a',
     },
     header: {
-        backgroundColor: 'white',
         paddingTop: Platform.OS === 'ios' ? 60 : 40,
         paddingBottom: 20,
         paddingHorizontal: 24,
-        borderBottomWidth: 1,
-        borderBottomColor: '#E2E8F0',
     },
     headerContent: {
         flexDirection: 'row',
@@ -293,30 +506,37 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#1E293B',
+        color: '#FFFFFF',
     },
     privacyButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#EEF2FF',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderRadius: 8,
     },
     privacyButtonText: {
-        color: '#4F46E5',
+        color: '#FFFFFF',
         marginLeft: 6,
         fontSize: 14,
         fontWeight: '500',
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 300,
+    },
     profileSection: {
         alignItems: 'center',
         paddingVertical: 24,
-        backgroundColor: 'white',
-        borderBottomWidth: 1,
-        borderBottomColor: '#E2E8F0',
+        marginHorizontal: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 16,
+        marginBottom: 20,
     },
     avatarContainer: {
         alignItems: 'center',
@@ -327,59 +547,60 @@ const styles = StyleSheet.create({
         height: 120,
         borderRadius: 60,
         marginBottom: 12,
+        borderWidth: 4,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
     },
     editAvatarButton: {
-        backgroundColor: '#EEF2FF',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 6,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
     },
     editAvatarText: {
-        color: '#4F46E5',
+        color: '#FFFFFF',
         fontSize: 14,
         fontWeight: '500',
     },
     profileName: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#1E293B',
+        color: '#FFFFFF',
         marginBottom: 4,
     },
     profileRole: {
         fontSize: 16,
-        color: '#64748B',
+        color: 'rgba(255, 255, 255, 0.7)',
     },
     contentContainer: {
-        padding: 24,
+        padding: 20,
     },
     sectionTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#1E293B',
+        color: '#FFFFFF',
         marginBottom: 20,
         marginTop: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+        paddingBottom: 8,
     },
     inputContainer: {
         marginBottom: 16,
     },
-    labelContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    label: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#FFFFFF',
         marginBottom: 8,
     },
-    label: {
-        fontSize: 14,
-        color: '#64748B',
-        marginLeft: 8,
-    },
     input: {
-        backgroundColor: 'white',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
         borderWidth: 1,
-        borderColor: '#E2E8F0',
-        borderRadius: 8,
-        padding: 12,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderRadius: 12,
+        padding: 14,
         fontSize: 16,
-        color: '#1E293B',
+        color: '#FFFFFF',
     },
     row: {
         flexDirection: 'row',
@@ -394,58 +615,130 @@ const styles = StyleSheet.create({
     },
     genderOptions: {
         flexDirection: 'row',
-        backgroundColor: 'white',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
         borderWidth: 1,
-        borderColor: '#E2E8F0',
-        borderRadius: 8,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderRadius: 12,
         overflow: 'hidden',
     },
     genderOption: {
         flex: 1,
-        paddingVertical: 12,
+        paddingVertical: 14,
         alignItems: 'center',
     },
     genderOptionSelected: {
-        backgroundColor: '#4F46E5',
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
     },
     genderOptionText: {
-        color: '#64748B',
+        color: 'rgba(255, 255, 255, 0.7)',
         fontSize: 16,
     },
     genderOptionTextSelected: {
-        color: 'white',
+        color: '#FFFFFF',
+        fontWeight: 'bold',
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         marginTop: 32,
         gap: 12,
+        marginBottom: 40,
     },
     saveButton: {
-        backgroundColor: '#4F46E5',
-        paddingVertical: 12,
+        backgroundColor: '#FFFFFF',
+        paddingVertical: 14,
         paddingHorizontal: 24,
-        borderRadius: 8,
-        minWidth: 120,
+        borderRadius: 12,
+        minWidth: 140,
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 3,
     },
     saveButtonText: {
-        color: 'white',
+        color: '#06607a',
         fontSize: 16,
         fontWeight: '600',
     },
     closeButton: {
+        backgroundColor: 'transparent',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        minWidth: 140,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    closeButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    // Alert styles
+    alertOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    alertContainer: {
         backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 24,
+        width: '80%',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    alertIconContainer: {
+        marginBottom: 16,
+    },
+    alertIconCircle: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#4CAF50',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    alertIconText: {
+        color: 'white',
+        fontSize: 32,
+        fontWeight: 'bold',
+    },
+    alertTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 8,
+    },
+    alertMessage: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 24,
+    },
+    alertButton: {
+        backgroundColor: '#06607a',
         paddingVertical: 12,
         paddingHorizontal: 24,
         borderRadius: 8,
         minWidth: 120,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#E2E8F0',
     },
-    closeButtonText: {
-        color: '#64748B',
+    alertButtonText: {
+        color: 'white',
         fontSize: 16,
         fontWeight: '600',
     },

@@ -32,14 +32,14 @@ export default function HomeScreen() {
     }, [])
     return (
         <ScrollView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="white" />
+            <StatusBar barStyle="light-content" backgroundColor="#008374" />
             <View style={styles.header}>
                 <View>
                     <Text style={styles.name}>Payroll </Text>
                 </View>
-                <TouchableOpacity style={styles.profileButton}>
+                {/* <TouchableOpacity style={styles.profileButton}>
                     <Feather name="user" size={24} color="#4f46e5" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
 
             <View style={styles.salaryCard}>
@@ -73,12 +73,12 @@ export default function HomeScreen() {
                 {payslips.map((item: any) => {
 
                     return (
-                        <TouchableOpacity style={styles.activityItem} key={item.id}>
-                            {/* <TouchableOpacity style={styles.activityItem} key={item.id}
+                        // <TouchableOpacity style={styles.activityItem} key={item.id}>
+                        <TouchableOpacity style={styles.activityItem} key={item.id}
                             onPress={() => router.push({
                                 pathname: "/(tabs)/payslip/payslipModal",
                                 params: { email: item.email, salMonth: item.payMonth }
-                            })}> */}
+                            })}>
                             <View style={styles.activityIconContainer}>
                                 <Feather name="file-text" size={20} color="#4f46e5" />
                             </View>
@@ -98,7 +98,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "#06607a",
         paddingTop: 10,
     },
     header: {
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 20,
         paddingTop: 30,
-        backgroundColor: "#fff",
+        backgroundColor: "#008374",
     },
     greeting: {
         fontSize: 14,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     name: {
         fontSize: 20,
         fontWeight: "bold",
-        color: "#111827",
+        color: "#fff",
     },
     profileButton: {
         width: 40,
@@ -191,14 +191,14 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: "bold",
-        color: "#111827",
+        color: "#f5f5f5",
         marginHorizontal: 16,
         marginTop: 24,
         marginBottom: 12,
     },
     viewSlip: {
         marginHorizontal: 16,
-        backgroundColor: "#4f46e5",
+        backgroundColor: "#3396f3",
         padding: 3,
         paddingHorizontal: 10,
         borderRadius: 10,
@@ -246,8 +246,8 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: "#f3f4f6",
+        // borderBottomWidth: 1,
+        // borderBottomColor: "#f3f4f6",
     },
     activityIconContainer: {
         width: 40,

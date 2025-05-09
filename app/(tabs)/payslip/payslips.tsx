@@ -338,22 +338,24 @@ export default function PayslipsScreen() {
     return (
         <View style={styles.container}>
             <ScrollView style={styles.payslipDetailContainer}>
-                <TouchableOpacity
+                <View
                     style={styles.backButton}
-                    onPress={() => router.back()}
                 >
-                    <Feather name="arrow-left" size={20} color="#4f46e5" />
-                    <Text style={styles.backButtonText}>Back to Payslips</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity onPress={() => router.back()}>
 
-                <View style={styles.payslipDetailHeader}>
+                        <Feather name="arrow-left" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    <Text style={styles.backButtonText}>Salary Details</Text>
+                </View>
+
+                {/* <View style={styles.payslipDetailHeader}>  
                     <Text style={styles.payslipDetailTitle}>
-                        Payslip for {month} {year}
+                        Salary Details
                     </Text>
-                    <Text style={styles.payslipDetailDate}>
+                     <Text style={styles.payslipDetailDate}>
                         Generated on {new Date().toLocaleDateString()}
                     </Text>
-                </View>
+                </View> */}
 
                 <View style={styles.payslipDetailCard}>
                     <LinearGradient
@@ -371,7 +373,7 @@ export default function PayslipsScreen() {
                         </View>
                     </LinearGradient>
 
-                    <View style={styles.employeeInfoCard}>
+                    {/* <View style={styles.employeeInfoCard}>
                         <View style={styles.employeeInfoRow}>
                             <View style={styles.employeeInfoItem}>
                                 <Text style={styles.employeeInfoLabel}>Employee ID</Text>
@@ -392,7 +394,7 @@ export default function PayslipsScreen() {
                                 <Text style={styles.employeeInfoValue}>{new Date().toLocaleDateString()}</Text>
                             </View>
                         </View>
-                    </View>
+                    </View> */}
 
                     <View style={styles.payslipDetailSection}>
                         <View style={styles.sectionHeader}>
@@ -470,14 +472,14 @@ export default function PayslipsScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.footer}>
+                {/* <View style={styles.footer}>
                     <Text style={styles.footerText}>
                         This is a computer-generated document.
                     </Text>
                     <Text style={styles.footerText}>
                         No signature is required.
                     </Text>
-                </View>
+                </View> */}
             </ScrollView>
         </View>
     );
@@ -486,22 +488,23 @@ export default function PayslipsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: "#06607a",
         paddingTop: 25,
     },
     payslipDetailContainer: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: "#06607a",
     },
     backButton: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
+        backgroundColor: '#008374',
     },
     backButtonText: {
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: '500',
-        color: '#4f46e5',
+        color: '#ffffff',
         marginLeft: 8,
     },
     payslipDetailHeader: {
@@ -509,13 +512,15 @@ const styles = StyleSheet.create({
         paddingTop: 0,
     },
     payslipDetailTitle: {
-        fontSize: 20,
+        marginTop: 10,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827',
+        textAlign: 'center',
+        color: '#ffffff',
     },
     payslipDetailDate: {
         fontSize: 14,
-        color: '#6b7280',
+        color: '#f5f5f5',
         marginTop: 4,
     },
     payslipDetailCard: {

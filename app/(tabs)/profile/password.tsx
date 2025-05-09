@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Make sure to install expo/vector-icons
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, StatusBar, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ChangePasswordScreen() {
     const [oldPassword, setOldPassword] = useState('');
@@ -10,10 +10,8 @@ export default function ChangePasswordScreen() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         // Implement your save logic here
-
-        // Example validation
         if (newPassword !== confirmPassword) {
             alert('New passwords do not match');
             return;
@@ -24,8 +22,36 @@ export default function ChangePasswordScreen() {
             return;
         }
 
+        const payload = {
+            oldPassword,
+            newPassword,
+
+        };
+
+        try {
+            const response = await fetch('http://192.168.1.25:8080/password-setting', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include', // to send cookies/session if required
+            });
+
+            const result = await response.json();
+            console.log("hii---", response)
+            if (result.validated) {
+                Alert.alert('Success', 'Password changed successfully!');
+            } else {
+                Alert.alert('Error', 'Password change failed. Check inputs.');
+                console.log(result); // To debug server-side validation errors
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Error', 'An error occurred while changing the password.');
+        }
         // Call API to change password
-        alert('Password changed successfully');
+        // alert('Password changed successfully');
     };
 
     const handleClose = () => {
@@ -35,6 +61,7 @@ export default function ChangePasswordScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#06607a" />
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.keyboardAvoid}
@@ -42,7 +69,7 @@ export default function ChangePasswordScreen() {
                 <View style={styles.card}>
                     <View style={styles.headerContainer}>
                         <Text style={styles.title}>Change Password</Text>
-                        <View style={styles.purpleLine}></View>
+                        <View style={styles.accentLine}></View>
                     </View>
 
                     <View style={styles.inputGroup}>
@@ -114,7 +141,7 @@ export default function ChangePasswordScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F5FF', // Light purple background
+        backgroundColor: '#06607a', // Changed to requested teal/blue color
     },
     keyboardAvoid: {
         flex: 1,
@@ -125,9 +152,9 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 24,
         margin: 16,
-        shadowColor: '#6A3EA1',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.2,
         shadowRadius: 12,
         elevation: 5,
     },
@@ -137,13 +164,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: '700',
-        color: '#4F46E5', // Purple color for title
+        color: '#06607a', // Changed to match background
         marginBottom: 8,
     },
-    purpleLine: {
+    accentLine: {
         height: 3,
         width: 60,
-        backgroundColor: '#9D6FDE',
+        backgroundColor: '#06607a', // Changed to match background
         borderRadius: 2,
     },
     inputGroup: {
@@ -152,14 +179,14 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 16,
         marginBottom: 8,
-        color: '#696868', // Purple color for labels
+        color: '#555555', // Darkened for better contrast
         fontWeight: '600',
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1.5,
-        borderColor: '#E2D9F3', // Light purple border
+        borderColor: '#E0E0E0', // Neutral border color
         borderRadius: 12,
         backgroundColor: '#FFFFFF',
     },
@@ -178,17 +205,17 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     saveButton: {
-        backgroundColor: '#4F46E5', // Purple save button
+        backgroundColor: '#06607a', // Changed to match background
         paddingVertical: 14,
         paddingHorizontal: 32,
         borderRadius: 12,
         flex: 1,
         marginRight: 10,
         alignItems: 'center',
-        shadowColor: '#6A3EA1',
-        shadowOffset: { width: 0, height: 4 },
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
-        shadowRadius: 8,
+        shadowRadius: 4,
         elevation: 3,
     },
     saveButtonText: {
@@ -202,12 +229,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 32,
         borderRadius: 12,
         borderWidth: 1.5,
-        borderColor: '#4F46E5', // Purple border
+        borderColor: '#06607a', // Changed to match background
         flex: 1,
         alignItems: 'center',
     },
     closeButtonText: {
-        color: '#4F46E5', // Purple text
+        color: '#06607a', // Changed to match background
         fontSize: 16,
         fontWeight: '600',
     },
