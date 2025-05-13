@@ -8,10 +8,12 @@ import {
     Modal,
     TouchableWithoutFeedback,
     Keyboard,
-    Platform, Pressable
+    Platform, Pressable,
+    Alert
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
+import { useSession } from '@/context/ContextSession';
 type LeaveModalProps = {
     visible: boolean;
     onClose: () => void;
@@ -25,6 +27,7 @@ export default function LeaveModal({ visible, onClose }: LeaveModalProps) {
     const [dateText, setDateText] = useState('Start and end date');
     const [markedDates, setMarkedDates] = useState({});
     const [calendarKey, setCalendarKey] = useState(1);
+    const { sessionData } = useSession();
 
     // Get today's date in YYYY-MM-DD format
     const getTodayString = () => {
@@ -155,9 +158,18 @@ export default function LeaveModal({ visible, onClose }: LeaveModalProps) {
         setCalendarKey(prevKey => prevKey + 1);
     };
 
+    function formatDateRange(start: string | Date, end: string | Date): string {
+        const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: '2-digit' };
+
+        const startFormatted = new Date(start).toLocaleDateString('en-GB', options);
+        const endFormatted = new Date(end).toLocaleDateString('en-GB', options);
+
+        return `${startFormatted} - ${endFormatted}`;
+    }
+
     // Handle form submission
-    const handleSubmit = () => {
-        // Validate form
+    const handleSubmit = async () => {
+
         if (!reason.trim()) {
             alert('Please enter a reason for leave');
             return;
@@ -167,8 +179,6 @@ export default function LeaveModal({ visible, onClose }: LeaveModalProps) {
             alert('Please select a leave period');
             return;
         }
-
-        // Create leave request object
         const leaveRequest = {
             reason,
             startDate,
@@ -176,9 +186,30 @@ export default function LeaveModal({ visible, onClose }: LeaveModalProps) {
             comment
         };
 
-        console.log('Leave Request:', leaveRequest);
+        const formData = new FormData();
 
-        // Reset form and close modal
+        formData.append('taskType', "timeOff");
+        formData.append('taskName', reason);
+        formData.append('status', "pending");
+        formData.append('teamId', sessionData?.teamId);
+        formData.append('follow_Date', formatDateRange(startDate, endDate));
+        formData.append('description', comment);
+        try {
+            const response = await fetch('http://192.168.1.25:8080/add-holidays-list', {
+                method: 'POST',
+                credentials: "include",
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                body: formData,
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+            } else {
+            }
+        } catch (error) {
+        }
         resetForm();
         onClose();
     };

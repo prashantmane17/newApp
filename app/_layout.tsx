@@ -11,7 +11,6 @@ import { View, ActivityIndicator } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { SessionProvider, useSession } from '@/context/ContextSession';
 import { useRouter } from 'expo-router';
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -24,7 +23,6 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  // First useEffect for initialization
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -36,13 +34,12 @@ export default function RootLayout() {
             console.log('Some permissions were not granted');
           }
           setIsInitialized(true);
-          // Add a small delay to show the loader
           setTimeout(() => {
             setIsLoading(false);
           }, 100);
         }
       } catch (error) {
-        console.error('Error during initialization:', error);
+        // console.error('Error during initialization:', error);
         setIsLoading(false);
         setIsInitialized(true);
       }
@@ -51,7 +48,6 @@ export default function RootLayout() {
     initialize();
   }, [loaded]);
 
-  // Second useEffect for navigation after initialization
   useEffect(() => {
     if (isInitialized && !isLoading) {
       if (sessionData?.loginId) {

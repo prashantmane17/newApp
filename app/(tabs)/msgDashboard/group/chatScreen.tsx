@@ -21,7 +21,7 @@ export default function GroupChatScreen() {
 
     const { groupId } = useLocalSearchParams();
     const [group, setGroup] = useState<(typeof mockGroups)[0] | undefined>(undefined);
-    const [messages, setMessages] = useState<typeof mockMessages>([]);
+    const [messages, setMessages] = useState<any>([]);
     const [newMessage, setNewMessage] = useState('');
     const flatListRef = useRef<FlatList>(null);
 

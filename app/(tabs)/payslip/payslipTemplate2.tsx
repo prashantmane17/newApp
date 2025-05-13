@@ -335,8 +335,8 @@ export default function PayslipsScreen() {
 
             setLoading(false);
         } catch (error) {
-            console.error('Error generating PDF:', error);
-            Alert.alert('Error', 'Failed to generate PDF');
+            // console.error('Error generating PDF:', error);
+            // Alert.alert('Error', 'Failed to generate PDF');
             setLoading(false);
         }
     };
@@ -363,8 +363,8 @@ export default function PayslipsScreen() {
 
             setLoading(false);
         } catch (error) {
-            console.error('Error sharing PDF:', error);
-            Alert.alert('Error', 'Failed to share PDF');
+            // console.error('Error sharing PDF:', error);
+            // Alert.alert('Error', 'Failed to share PDF');
             setLoading(false);
         }
     };

@@ -44,7 +44,7 @@ export default function CreateGroupModal({
 
             return `data:${mimeType};base64,${base64}`;
         } catch (error) {
-            console.error('Error converting image to base64:', error);
+            // console.error('Error converting image to base64:', error);
             return null;
         }
     };

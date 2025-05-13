@@ -53,7 +53,6 @@ export default function ProfileScreen() {
         loadSalary();
     }, [])
 
-    // Custom alert component
     const SuccessAlert = () => {
         if (!showSuccessAlert) return null;
 
@@ -115,17 +114,13 @@ export default function ProfileScreen() {
             const result = await response.json();
             console.log("Success:", result);
 
-            // Show success alert
             setShowSuccessAlert(true);
 
-            // Automatically hide the alert after 3 seconds
             setTimeout(() => {
                 setShowSuccessAlert(false);
             }, 3000);
 
         } catch (error) {
-            console.error("Error updating profile:", error);
-            // You could also add an error alert here
             Alert.alert("Error", "Failed to update profile. Please try again.");
         } finally {
             setLoading(false);
@@ -135,7 +130,6 @@ export default function ProfileScreen() {
     return (
         <View style={styles.mainContainer}>
             <StatusBar barStyle="light-content" />
-            {/* Success Alert Component */}
             <SuccessAlert />
 
             <ScrollView style={styles.container}>

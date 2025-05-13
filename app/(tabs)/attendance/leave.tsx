@@ -21,10 +21,8 @@ export default function LeaveCard() {
                 console.log("Fetched Data:", data.offRequests);
                 setLeaveData(data.offRequests);
             } else {
-                console.error("Failed to fetch leave data");
             }
         } catch (error) {
-            console.error("Error fetching leave data:", error);
         } finally {
             setLoading(false);
         }
@@ -64,17 +62,19 @@ export default function LeaveCard() {
                                     <Text style={styles.value}>{leave.taskName}</Text>
                                 </View>
 
-                                <View style={styles.row}>
-                                    <Text style={styles.label}>Days:</Text>
-                                    <Text style={styles.value}>{leave.noOfDays}</Text>
+                                <View style={styles.combinedrow}>
+                                    <View style={styles.row}>
+                                        <Text style={styles.label}>Days:</Text>
+                                        <Text style={styles.value}>{leave.noOfDays}</Text>
+                                    </View>
+                                    <View style={styles.row}>
+                                        <Text style={styles.label}>Status:</Text>
+                                        <Text style={[styles.value, leave.status === 'pending' && styles.pending]}>
+                                            {leave.status}
+                                        </Text>
+                                    </View>
                                 </View>
 
-                                <View style={styles.row}>
-                                    <Text style={styles.label}>Status:</Text>
-                                    <Text style={[styles.value, leave.status === 'pending' && styles.pending]}>
-                                        {leave.status}
-                                    </Text>
-                                </View>
 
                                 <Text style={styles.appliedDate}>
                                     Applied on {leave.date}
@@ -114,6 +114,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 4,
+    },
+    combinedrow: {
+        flexDirection: 'row',
+        justifyContent: "space-between",
     },
     row: {
         flexDirection: 'row',

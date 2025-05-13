@@ -43,12 +43,12 @@ export const SessionProvider = ({ children }: ChatProviderProps) => {
                 const data = await response.json();
                 setChatData(data);
             } catch (jsonError) {
-                console.error("JSON Parsing Error:", jsonError);
-                Alert.alert("Error", "Invalid JSON response from the server.");
+                // console.error("JSON Parsing Error:", jsonError);
+                // Alert.alert("Error", "Invalid JSON response from the server.");
             }
         } catch (error) {
-            console.error("Network Error:", error);
-            Alert.alert("Error", "Failed to fetch session details. Please try again.");
+            // console.error("Network Error:", error);
+            // Alert.alert("Error", "Failed to fetch session details. Please try again.");
         }
     };
 

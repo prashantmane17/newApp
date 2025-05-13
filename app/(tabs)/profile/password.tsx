@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, StatusBar, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 export default function ChangePasswordScreen() {
     const [oldPassword, setOldPassword] = useState('');
@@ -11,7 +12,6 @@ export default function ChangePasswordScreen() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleSave = async () => {
-        // Implement your save logic here
         if (newPassword !== confirmPassword) {
             alert('New passwords do not match');
             return;
@@ -22,34 +22,38 @@ export default function ChangePasswordScreen() {
             return;
         }
 
-        const payload = {
-            oldPassword,
-            newPassword,
-
-        };
+        const formBody = new URLSearchParams({
+            old_password: oldPassword,
+            new_password: newPassword,
+            repeat_password: confirmPassword
+        }).toString();
 
         try {
             const response = await fetch('http://192.168.1.25:8080/password-setting', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify(payload),
-                credentials: 'include', // to send cookies/session if required
+                body: formBody,
+                credentials: 'include',
             });
 
             const result = await response.json();
-            console.log("hii---", response)
+            console.log("Server Response:", result);
+
             if (result.validated) {
+                setOldPassword('')
+                setNewPassword("")
+                setConfirmPassword('')
                 Alert.alert('Success', 'Password changed successfully!');
             } else {
-                Alert.alert('Error', 'Password change failed. Check inputs.');
-                console.log(result); // To debug server-side validation errors
+                Alert.alert('Error', 'Password change failed.');
             }
         } catch (error) {
-            console.error(error);
-            Alert.alert('Error', 'An error occurred while changing the password.');
+            // console.error('Error:', error);
+            // Alert.alert('Error', 'Something went wrong.');
         }
+
         // Call API to change password
         // alert('Password changed successfully');
     };
@@ -128,8 +132,8 @@ export default function ChangePasswordScreen() {
                             <Text style={styles.saveButtonText}>Save</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-                            <Text style={styles.closeButtonText}>Close</Text>
+                        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+                            <Text style={styles.closeButtonText}>Back</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

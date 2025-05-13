@@ -135,8 +135,7 @@ export default function ChatScreen() {
 
             return downloadResult.uri
         } catch (error) {
-            console.error("Download error:", error)
-            Alert.alert("Error", "Failed to download the image.")
+            // Alert.alert("Error", "Failed to download the image.")
         } finally {
             setDownloadingImages((prev) => ({ ...prev, [imageName]: false }))
         }
@@ -339,8 +338,8 @@ export default function ChatScreen() {
                     Alert.alert("Error", "Failed to send message");
                 }
             } catch (error) {
-                console.error("Error sending message:", error);
-                Alert.alert("Error", "Failed to send message");
+                // console.error("Error sending message:", error);
+                // Alert.alert("Error", "Failed to send message");
             }
         }
     };

@@ -44,8 +44,8 @@ export default function PayslipsScreen() {
                 setMonth(date.toLocaleString('default', { month: 'long' }));
                 setYear(date.getFullYear().toString());
             } catch (err) {
-                console.error("Failed to parse JSON:", err);
-                Alert.alert("Error", "Failed to load payslip data");
+                // console.error("Failed to parse JSON:", err);
+                // Alert.alert("Error", "Failed to load payslip data");
             }
         }
     }, [data]);
@@ -293,8 +293,8 @@ export default function PayslipsScreen() {
 
             setLoading(false);
         } catch (error) {
-            console.error('Error generating PDF:', error);
-            Alert.alert('Error', 'Failed to generate PDF');
+            // console.error('Error generating PDF:', error);
+            // Alert.alert('Error', 'Failed to generate PDF');
             setLoading(false);
         }
     };
@@ -329,8 +329,8 @@ export default function PayslipsScreen() {
 
             setLoading(false);
         } catch (error) {
-            console.error('Error sharing PDF:', error);
-            Alert.alert('Error', 'Failed to share PDF');
+            // console.error('Error sharing PDF:', error);
+            // Alert.alert('Error', 'Failed to share PDF');
             setLoading(false);
         }
     };
