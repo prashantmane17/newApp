@@ -76,7 +76,7 @@ export default function HomeScreen() {
                         // <TouchableOpacity style={styles.activityItem} key={item.id}>
                         <TouchableOpacity style={styles.activityItem} key={item.id}
                             onPress={() => router.push({
-                                pathname: "/(tabs)/payslip/payslipModal",
+                                pathname: "/(tabs)/payslip/payslipTemplate2",
                                 params: { email: item.email, salMonth: item.payMonth }
                             })}>
                             <View style={styles.activityIconContainer}>
@@ -91,6 +91,11 @@ export default function HomeScreen() {
                     )
                 })}
             </View>
+            {payslips.length === 0 && (
+                <View style={styles.notfundMsg}>
+                    <Text style={styles.notfound}>Payslips not found</Text>
+                </View>
+            )}
         </ScrollView >
     )
 }
@@ -109,6 +114,22 @@ const styles = StyleSheet.create({
         paddingTop: 30,
         backgroundColor: "#008374",
     },
+    notfundMsg: {
+        backgroundColor: 'transparent',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    notfound: {
+        color: '#6b7280',
+        fontSize: 20,
+        fontWeight: '500',
+    },
+
+
     greeting: {
         fontSize: 14,
         color: "#6b7280",
@@ -246,8 +267,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         padding: 16,
-        // borderBottomWidth: 1,
-        // borderBottomColor: "#f3f4f6",
     },
     activityIconContainer: {
         width: 40,

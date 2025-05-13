@@ -5,6 +5,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, StatusB
 import { Feather } from "@expo/vector-icons"
 import { parse, getDate } from 'date-fns';
 import { router } from "expo-router";
+import LeaveModal from "@/components/attendance/LeaveModal";
 
 // Generate attendance data for a specific month and year
 type RealEntry = {
@@ -92,6 +93,8 @@ export default function AttendanceScreen() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [attendanceData, setAttendanceData] = useState<Attend[]>([])
   const [empAttendance, setEmpAttendance] = useState<any>([])
+  const [modalVisible, setModalVisible] = useState(false);
+
 
   // Calculate summary stats
   const [summary, setSummary] = useState({
@@ -135,10 +138,6 @@ export default function AttendanceScreen() {
   }, [currentMonth, currentYear, empAttendance])
 
 
-
-
-
-
   // Navigate to previous month
   const goToPreviousMonth = () => {
     if (currentMonth === 1) {
@@ -176,6 +175,9 @@ export default function AttendanceScreen() {
       "December",
     ]
     return monthNames[Number(month) - 1]
+  }
+  const handleLeaveModel = () => {
+
   }
 
   const renderAttendanceItem = ({ item }: { item: Attend }) => (
@@ -313,13 +315,22 @@ export default function AttendanceScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      <TouchableOpacity
-        onPress={() => router.push("/(tabs)/attendance/leave")}
-        style={styles.leaveButton}
-      >
-        <Text style={styles.leaveText}>My Leaves</Text>
-      </TouchableOpacity>
+      <View style={styles.leaveButtonContainer}>
+        <TouchableOpacity
+          onPress={() => setModalVisible(true)}
+          style={styles.leaveButton}
+        >
+          <Text style={styles.leaveText}>Apply Leaves</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push("/(tabs)/attendance/leave")}
+          style={styles.leaveButton}
+        >
+          <Text style={styles.leaveText}>My Leaves</Text>
+        </TouchableOpacity>
+      </View>
 
+      <LeaveModal visible={modalVisible} onClose={() => setModalVisible(false)} />
       <View style={styles.summary}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>{summary.present}</Text>
@@ -396,13 +407,18 @@ const styles = StyleSheet.create({
   viewToggleButtonActive: {
     backgroundColor: "#4f46e5",
   },
+  leaveButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: "center",
+    margin: 10,
+  },
   leaveButton: {
     backgroundColor: '#00a896', // A teal-green button color for contrast
     paddingVertical: 7,
     paddingHorizontal: 15,
     borderRadius: 8,
-    alignSelf: 'flex-end',
-    marginVertical: 10,
+    // alignSelf: 'flex-end',
     marginRight: 10,
     elevation: 3, // for Android shadow
     shadowColor: '#000', // for iOS shadow

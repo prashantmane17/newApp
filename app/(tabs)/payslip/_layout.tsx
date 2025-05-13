@@ -35,6 +35,14 @@ export default function MessagesLayout() {
                     headerBackTitle: 'Back'
                 }}
             />
+            <Stack.Screen
+                name="payslipTemplate2"
+                options={{
+                    title: 'Temp2',
+                    headerShown: false,
+                    headerBackTitle: 'Back'
+                }}
+            />
         </Stack>
     );
 }

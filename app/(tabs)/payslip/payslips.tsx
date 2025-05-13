@@ -36,7 +36,7 @@ export default function PayslipsScreen() {
         if (typeof data === 'string') {
             try {
                 const parsed = JSON.parse(data);
-                console.log("Parsed Data:", parsed);
+                // console.log("Parsed Data:", parsed);
                 setEmpSalary(parsed);
 
                 // Set current month and year
@@ -409,13 +409,51 @@ export default function PayslipsScreen() {
                             <Text style={styles.payslipDetailLabel}>House Rent Allowance</Text>
                             <Text style={styles.payslipDetailValue}>₹{empSalary.hra || 0}</Text>
                         </View>
+                        {empSalary.customizeEarn &&
+                            Object.entries(empSalary.customizeEarn).map(([key, value]) => (
+                                <View key={key} style={styles.payslipDetailRow}>
+                                    <Text style={styles.payslipDetailLabel}>{String(key)}</Text>
+                                    <Text style={styles.payslipDetailValue}>₹{String(value)}</Text>
+                                </View>
+                            ))}
                         <View style={styles.payslipDetailRow}>
                             <Text style={styles.payslipDetailLabel}>Fixed Allowance</Text>
                             <Text style={styles.payslipDetailValue}>₹{empSalary.fixedAllow || 0}</Text>
                         </View>
-
+                        {empSalary.customizeReimburse && Object.keys(empSalary.customizeReimburse).length > 0 && (
+                            <View style={[styles.sectionHeader, { marginTop: 10 }]}>
+                                <Feather name="dollar-sign" size={18} color="#4f46e5" />
+                                <Text style={styles.payslipDetailSectionTitle}>Other Allowances</Text>
+                            </View>
+                        )}
+                        {empSalary.customizeReimburse &&
+                            Object.entries(empSalary.customizeReimburse).map(([key, value]) => (
+                                <View key={key} style={styles.payslipDetailRow}>
+                                    <Text style={styles.payslipDetailLabel}>{String(key)}</Text>
+                                    <Text style={styles.payslipDetailValue}>₹{String(value)}</Text>
+                                </View>
+                            ))}
                         <View style={[styles.payslipDetailRow, styles.payslipDetailTotal]}>
                             <Text style={styles.payslipDetailTotalLabel}>Gross Pay</Text>
+                            <Text style={styles.payslipDetailTotalValue}>₹{empSalary.monthlyCTC || 0}</Text>
+                        </View>
+                        {empSalary.customizeDeduct && Object.keys(empSalary.customizeDeduct).length > 0 && (
+
+                            <View style={[styles.sectionHeader, { marginTop: 10 }]}>
+                                <Feather name="dollar-sign" size={18} color="#4f46e5" />
+                                <Text style={styles.payslipDetailSectionTitle}>Deduction</Text>
+                            </View>
+
+                        )}
+                        {empSalary.customizeDeduct &&
+                            Object.entries(empSalary.customizeDeduct).map(([key, value]) => (
+                                <View key={key} style={styles.payslipDetailRow}>
+                                    <Text style={styles.payslipDetailLabel}>{String(key)}</Text>
+                                    <Text style={styles.payslipDetailValue}>₹{String(value)}</Text>
+                                </View>
+                            ))}
+                        <View style={[styles.payslipDetailRow, styles.payslipDetailTotal]}>
+                            <Text style={styles.payslipDetailTotalLabel}>Net Pay</Text>
                             <Text style={styles.payslipDetailTotalValue}>₹{empSalary.grossPay || 0}</Text>
                         </View>
                     </View>
@@ -446,7 +484,7 @@ export default function PayslipsScreen() {
           */}
                 </View>
 
-                <View style={styles.actionButtonsContainer}>
+                {/* <View style={styles.actionButtonsContainer}>
                     <TouchableOpacity
                         style={styles.downloadButton}
                         onPress={downloadPdf}
@@ -470,7 +508,7 @@ export default function PayslipsScreen() {
                         <Feather name="share-2" size={18} color="#fff" />
                         <Text style={styles.actionButtonText}>Share</Text>
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
                 {/* <View style={styles.footer}>
                     <Text style={styles.footerText}>
