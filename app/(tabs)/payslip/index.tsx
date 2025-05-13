@@ -24,6 +24,7 @@ export default function HomeScreen() {
         });
         if (payslipResponse.ok) {
             const paySlipData = await payslipResponse.json()
+            console.log("jijiji----", paySlipData)
             setPayslips(paySlipData.payrunData)
         }
     }
@@ -63,22 +64,26 @@ export default function HomeScreen() {
 
             <View style={styles.headerView}>
                 <Text style={styles.sectionTitle}>Recent Activity</Text>
-                <TouchableOpacity style={styles.viewSlip} onPress={() => router.push("/(tabs)/payslip/payslipModal")}>
+                <TouchableOpacity style={styles.viewSlip} onPress={() => router.push("/(tabs)/payslip/allPayslips")}>
                     <Text style={[{ color: "white" }]} >View Payslips</Text>
                 </TouchableOpacity>
             </View>
 
 
             <View style={styles.activityList}>
-                {payslips.map((item: any) => {
-
-                    return (
-                        // <TouchableOpacity style={styles.activityItem} key={item.id}>
-                        <TouchableOpacity style={styles.activityItem} key={item.id}
-                            onPress={() => router.push({
-                                pathname: "/(tabs)/payslip/payslipTemplate2",
-                                params: { email: item.email, salMonth: item.payMonth }
-                            })}>
+                {payslips
+                    .filter((item: any) => item.approveStatus !== "Pending")
+                    .map((item: any, index: number) => (
+                        <TouchableOpacity
+                            style={styles.activityItem}
+                            key={index}
+                            onPress={() =>
+                                router.push({
+                                    pathname: "/(tabs)/payslip/payslipTemplate2",
+                                    params: { email: item.email, salMonth: item.payMonth },
+                                })
+                            }
+                        >
                             <View style={styles.activityIconContainer}>
                                 <Feather name="file-text" size={20} color="#4f46e5" />
                             </View>
@@ -88,8 +93,8 @@ export default function HomeScreen() {
                             </View>
                             <Feather name="chevron-right" size={20} color="#9ca3af" />
                         </TouchableOpacity>
-                    )
-                })}
+                    ))}
+
             </View>
             {payslips.length === 0 && (
                 <View style={styles.notfundMsg}>

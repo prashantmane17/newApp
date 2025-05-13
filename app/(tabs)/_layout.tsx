@@ -26,15 +26,6 @@
 //   );
 // }
 
-
-
-
-
-
-
-
-
-
 import { Stack } from 'expo-router';
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
@@ -97,7 +88,6 @@ export default function StackLayout() {
           </Stack>
         </View>
 
-        {/* Custom Bottom Navigation (hidden on '/') */}
         {pathname !== '/' && (
           <View style={styles.bottomNav}>
             {navigationItems.map((item) => (
@@ -119,7 +109,7 @@ export default function StackLayout() {
               style={styles.navItem}
               onPress={() => handleLogout()}
             >
-              <LogOut size={24} color="red" />
+              <LogOut size={24} color="#ffffff" />
               <Text style={styles.navText}>Logout</Text>
             </TouchableOpacity>
           </View>

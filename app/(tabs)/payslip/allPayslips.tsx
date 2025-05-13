@@ -1,21 +1,56 @@
 import { Feather } from '@expo/vector-icons'
-import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { router } from 'expo-router'
+import React, { useEffect, useState } from 'react'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 export default function allPayslips() {
+    const [payslips, setPayslips] = useState<any>([]);
+    const loadSalary = async () => {
+        const payslipResponse = await fetch("http://192.168.1.25:8080/employee-Payslip-Details-mobile", {
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+        });
+        if (payslipResponse.ok) {
+            const paySlipData = await payslipResponse.json()
+            setPayslips(paySlipData.payrunData)
+        }
+    }
+    useEffect(() => {
+        loadSalary();
+    }, [])
     return (
         <View style={styles.container}>
+            <View style={styles.backButton}>
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Feather name="arrow-left" size={24} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.backButtonText}>Payslips</Text>
+            </View>
             <View style={styles.activityList}>
-                <View style={styles.activityItem}>
-                    <View style={styles.activityIconContainer}>
-                        <Feather name="file-text" size={20} color="#4f46e5" />
-                    </View>
-                    <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>March 2025 Payslip</Text>
-                        <Text style={styles.activityDate}>March 31, 2025</Text>
-                    </View>
-                    <Feather name="chevron-right" size={20} color="#9ca3af" />
-                </View>
+                {payslips
+                    .filter((item: any) => item.approveStatus !== "Pending")
+                    .map((item: any, index: number) => (
+                        <TouchableOpacity
+                            style={styles.activityItem}
+                            key={index}
+                            onPress={() =>
+                                router.push({
+                                    pathname: "/(tabs)/payslip/payslipTemplate2",
+                                    params: { email: item.email, salMonth: item.payMonth },
+                                })
+                            }
+                        >
+                            <View style={styles.activityIconContainer}>
+                                <Feather name="file-text" size={20} color="#4f46e5" />
+                            </View>
+                            <View style={styles.activityContent}>
+                                <Text style={styles.activityTitle}>{item.payMonth} Payslip</Text>
+                                <Text style={styles.activityDate}>₹{item.monthCtc}</Text>
+                            </View>
+                            <Feather name="chevron-right" size={20} color="#9ca3af" />
+                        </TouchableOpacity>
+                    ))}
             </View>
         </View>
     )
@@ -23,8 +58,20 @@ export default function allPayslips() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: "#06607a",
         paddingTop: 25,
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        backgroundColor: '#008374',
+    },
+    backButtonText: {
+        fontSize: 18,
+        fontWeight: '500',
+        color: '#ffffff',
+        marginLeft: 8,
     },
     activityList: {
         backgroundColor: "#fff",
@@ -41,8 +88,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: "#f3f4f6",
+        marginBottom: 10,
     },
     activityIconContainer: {
         width: 40,

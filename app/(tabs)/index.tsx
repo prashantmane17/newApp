@@ -145,8 +145,8 @@ export default function LoginScreen() {
     }
   };
   const handleForgotPassword = () => {
-    router.replace('/(tabs)/msgDashboard');
-    // setCurrentScreen('forgotPassword');
+    // router.replace('/(tabs)/msgDashboard');
+    setCurrentScreen('forgotPassword');
   };
 
   const handleBackToLogin = () => {
@@ -154,7 +154,6 @@ export default function LoginScreen() {
   };
 
   const handleSendCode = () => {
-    // Dummy function to simulate sending verification code
     Alert.alert("Code Sent", `A verification code has been sent to ${email}`);
     setVerificationCode(['', '', '', '', '', ''])
     setCurrentScreen('verificationCode');
@@ -165,23 +164,20 @@ export default function LoginScreen() {
     newCode[index] = text;
     setVerificationCode(newCode);
 
-    // Auto-advance to next input if a digit was entered
     if (text.length === 1 && index < 5) {
-      codeInputRefs.current[index + 1]?.focus(); // ✅ Type-safe focus()
+      codeInputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyPress = (e: { nativeEvent: { key: string } }, index: number) => {
-    // Handle backspace to move to previous input
     if (e.nativeEvent.key === "Backspace" && index > 0 && verificationCode[index] === "") {
-      codeInputRefs.current[index - 1]?.focus(); // ✅ Type-safe focus()
+      codeInputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleVerifyCode = () => {
     const code = verificationCode.join('');
     if (code.length === 6) {
-      // Dummy verification - in a real app, you'd verify with your backend
       if (code === '123456') {
         Alert.alert("Success", "Verification successful! You can now reset your password.");
         setCurrentScreen('newPassword');
@@ -223,9 +219,6 @@ export default function LoginScreen() {
           resizeMode="contain"
         />
       </View>
-
-      {/* <Text style={styles.welcomeText}>Welcome!</Text> */}
-
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Emial</Text>
         <View style={styles.phoneInputWrapper}>

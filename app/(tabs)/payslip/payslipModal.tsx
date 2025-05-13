@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+"use client"
+
+import { useEffect, useState } from "react"
 import {
   View,
   Text,
@@ -9,28 +11,24 @@ import {
   ActivityIndicator,
   Platform,
   Dimensions,
-  Image
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import * as Print from 'expo-print';
-import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StorageAccessFramework } from 'expo-file-system';
+} from "react-native"
+import { Feather } from "@expo/vector-icons"
+import { useLocalSearchParams, useRouter } from "expo-router"
+import * as FileSystem from "expo-file-system"
+import * as Sharing from "expo-sharing"
+import * as Print from "expo-print"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { StorageAccessFramework } from "expo-file-system"
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window")
 
 export default function PayslipsScreen() {
-  const { email, salMonth } = useLocalSearchParams();
+  const { email, salMonth } = useLocalSearchParams()
   console.log("email----", email, "---month---", salMonth)
-  const [loading, setLoading] = useState(false);
-  const [dataLoading, setDataLoading] = useState(true);
+  const [loading, setLoading] = useState(false)
+  const [dataLoading, setDataLoading] = useState(true)
 
-  const [empDetails, setEmpDetails] = useState<any>({
-
-  });
+  const [empDetails, setEmpDetails] = useState<any>({})
   const router = useRouter();
   const loadPayDetails = async () => {
     setDataLoading(true)
@@ -38,8 +36,8 @@ export default function PayslipsScreen() {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-    });
-    console.log("res-----", response)
+    })
+    // console.log("res-----", response)
     if (response.ok) {
       const data = await response.json()
       console.log("jio---", data)
@@ -48,12 +46,37 @@ export default function PayslipsScreen() {
     setDataLoading(false)
   }
   useEffect(() => {
-    loadPayDetails();
+    loadPayDetails()
   }, [email])
 
-
   const generatePdfHtml = () => {
-    return `
+    let earningsRows = ""
+    const earnEntries = Object.entries(empDetails?.earnComponent || {});
+    const deductEntries = Object.entries(empDetails?.deductComponent || {});
+    const maxLength = Math.max(earnEntries.length, deductEntries.length);
+
+    earningsRows = '';
+
+    for (let i = 0; i < maxLength; i++) {
+      const [earnKey, earnVal] = earnEntries[i] || ['', ''];
+      const ytdEarnVal = empDetails?.ytdEarn?.[earnKey] || earnVal;
+
+      const [deductKey, deductVal] = deductEntries[i] || ['', ''];
+      const ytdDeductVal = empDetails?.ytdDeduct?.[deductKey] || deductVal;
+
+      earningsRows += `
+    <tr>
+      <td>${earnKey}</td>
+      <td>${earnVal}</td>
+      <td>${ytdEarnVal}</td>
+      <td>${deductKey}</td>
+      <td>${deductVal}</td>
+      <td>${ytdDeductVal}</td>
+    </tr>
+  `;
+    }
+
+    return `  
       <html>
         <head>
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
@@ -174,7 +197,7 @@ export default function PayslipsScreen() {
             </div>
             
             <div class="title-section">
-              <div class="title">Pay Slip For ${empDetails.payslipMonth}</div>
+              <div class="title">Pay Slip For ${empDetails.payMonth || empDetails.payslipMonth || "--"}</div>
             </div>
             
             <div class="employee-info">
@@ -185,7 +208,7 @@ export default function PayslipsScreen() {
                 </div>
                 <div class="info-row">
                   <div class="info-label">Name</div>
-                  <div class="info-value">${empDetails.name}</div>
+                  <div class="info-value">${empDetails.name || "--"}</div>
                 </div>
                 <div class="info-row">
                   <div class="info-label">Designation</div>
@@ -233,7 +256,7 @@ export default function PayslipsScreen() {
                 </div>
                 <div class="info-row">
                   <div class="info-label">CTC</div>
-                  <div class="info-value">${empDetails.ctc}</div>
+                  <div class="info-value">${empDetails.ctc || "--"}</div>
                 </div>
               </div>
             </div>
@@ -241,8 +264,8 @@ export default function PayslipsScreen() {
             <div class="attendance-section">
               <div class="attendance-title">Attendance</div>
               <div class="attendance-details">
-                <div class="attendance-item">Paid Days ${empDetails.paidDays}</div>
-                <div class="attendance-item">LOP ${empDetails.loseOP}</div>
+                <div class="attendance-item">Paid Days ${empDetails.paidDays || "--"}</div>
+                <div class="attendance-item">LOP ${empDetails.loseOP || "--"}</div>
               </div>
             </div>
             
@@ -255,47 +278,20 @@ export default function PayslipsScreen() {
                 <th>Current Month</th>
                 <th>YTD Deductions</th>
               </tr>
-              <tr>
-                <td>Basic Salary</td>
-                <td>${empDetails?.earnComponent["Basic Salary"] || '0.00'}</td>
-                <td>${empDetails?.ytdEarn["Basic Salary"] || '0.00'}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>House Rent Allowance</td>
-                <td>${empDetails?.earnComponent["House Rent Allowance"] || '0.00'}</td>
-                <td>${empDetails?.ytdEarn["House Rent Allowance"] || '0.00'}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>Fixed</td>
-                <td>${empDetails?.earnComponent["Fixed"] || '0.00'}</td>
-                <td>${empDetails?.ytdEarn["Fixed"] || '0.00'}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-              </tr>
+              ${earningsRows}
               <tr>
                 <td><strong>Total</strong></td>
-                <td><strong>${(
-        parseFloat((empDetails.basicSalMonth || "0").replace(/,/g, "")) +
-        parseFloat((empDetails.hra || "0").replace(/,/g, "")) +
-        parseFloat((empDetails.fixedAllow || "0").replace(/,/g, ""))
-      ).toFixed(2)}</strong></td>
+                <td><strong>${empDetails.monthlyCTC}</strong></td>
                 <td></td>
                 <td><strong>Total Deductions</strong></td>
-                <td><strong>${empDetails.totalDeduction || '0.00'}</strong></td>
+                <td><strong>${empDetails.totalDeduction || "0.00"}</strong></td>
                 <td></td>
               </tr>
             </table>
             
             <div class="net-pay-section">
-              <div class="net-pay">Net Pay : ${empDetails.netpay || '0.00'}</div>
-              <div class="net-pay-words">${empDetails.netpayInWords || '0.00'}.</div>
+              <div class="net-pay">Net Pay : ${empDetails.netpay || "0.00"}</div>
+              <div class="net-pay-words">${empDetails.netpayInWords || "--"}</div>
             </div>
             
             <div class="footer">
@@ -304,120 +300,114 @@ export default function PayslipsScreen() {
           </div>
         </body>
       </html>
-    `;
-  };
+    `
+  }
 
   const downloadPdf = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
 
-      const html = generatePdfHtml(); // Your HTML template
-      const { uri } = await Print.printToFileAsync({ html });
+      const html = generatePdfHtml() // Your HTML template
+      const { uri } = await Print.printToFileAsync({ html })
 
-      const fileName = `Payslip-${empDetails.payMonth}.pdf`;
+      const fileName = `Payslip-${empDetails.payMonth || "Payslip"}.pdf`
 
-      if (Platform.OS === 'android') {
-        const storedDirectoryUri = await AsyncStorage.getItem('pdfDirectoryUri');
+      if (Platform.OS === "android") {
+        const storedDirectoryUri = await AsyncStorage.getItem("pdfDirectoryUri")
 
-        let directoryUri = storedDirectoryUri;
+        let directoryUri = storedDirectoryUri
 
         if (!directoryUri) {
-          const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+          const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync()
           if (!permissions.granted) {
-            Alert.alert('Permission Denied', 'Cannot access the file system');
-            setLoading(false);
-            return;
+            Alert.alert("Permission Denied", "Cannot access the file system")
+            setLoading(false)
+            return
           }
 
-          directoryUri = permissions.directoryUri;
+          directoryUri = permissions.directoryUri
 
           // Save the selected directory URI for future use
-          await AsyncStorage.setItem('pdfDirectoryUri', directoryUri);
+          await AsyncStorage.setItem("pdfDirectoryUri", directoryUri)
         }
 
         // Now that we have the directory URI, create and write to the file
         const base64 = await FileSystem.readAsStringAsync(uri, {
           encoding: FileSystem.EncodingType.Base64,
-        });
+        })
 
-        const fileUri = await StorageAccessFramework.createFileAsync(
-          directoryUri,
-          fileName,
-          'application/pdf'
-        );
+        const fileUri = await StorageAccessFramework.createFileAsync(directoryUri, fileName, "application/pdf")
 
         await FileSystem.writeAsStringAsync(fileUri, base64, {
           encoding: FileSystem.EncodingType.Base64,
-        });
+        })
 
-        Alert.alert('Success', `PDF saved successfully`);
+        Alert.alert("Success", `PDF saved successfully`)
       } else {
         // iOS fallback: Share the file on iOS
         await Sharing.shareAsync(uri, {
-          UTI: '.pdf',
-          mimeType: 'application/pdf',
-        });
+          UTI: ".pdf",
+          mimeType: "application/pdf",
+        })
       }
 
-      setLoading(false);
+      setLoading(false)
     } catch (error) {
       // console.error('Error generating PDF:', error);
       // Alert.alert('Error', 'Failed to generate PDF');
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const sharePdf = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
 
       // Generate PDF
-      const html = generatePdfHtml();
-      const { uri } = await Print.printToFileAsync({ html });
+      const html = generatePdfHtml()
+      const { uri } = await Print.printToFileAsync({ html })
 
       // Set the custom name for the PDF file
-      const fileName = `Payslip-${empDetails.payMonth}.pdf`;
+      const fileName = `Payslip-${empDetails.payMonth || "Payslip"}.pdf`
 
       // Get a temporary directory for the file (or use a folder of your choice)
-      const filePath = FileSystem.documentDirectory + fileName;
+      const filePath = FileSystem.documentDirectory + fileName
 
       // Rename the generated PDF to the desired name
       await FileSystem.moveAsync({
         from: uri,
         to: filePath,
-      });
+      })
 
       // Now share the renamed file
       await Sharing.shareAsync(filePath, {
-        UTI: '.pdf',
-        mimeType: 'application/pdf',
-      });
+        UTI: ".pdf",
+        mimeType: "application/pdf",
+      })
 
-      setLoading(false);
+      setLoading(false)
     } catch (error) {
       // console.error('Error sharing PDF:', error);
       // Alert.alert('Error', 'Failed to share PDF');
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
   // const basicSalary = Object.keys(empDetails.earnComponent)[0];
   // const fixedSalary = Object.keys(empDetails.earnComponent)[1];
   // const hraSalary = Object.keys(empDetails.earnComponent)[2];
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-      >
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Feather name="arrow-left" size={20} color="#4f46e5" />
         <Text style={styles.backButtonText}>Back to Payslips</Text>
       </TouchableOpacity>
-      {dataLoading ? (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#008374" />
-      </View>) : (
+      {dataLoading ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#008374" />
+        </View>
+      ) : (
         <ScrollView style={styles.payslipDetailContainer}>
-
           {/* Mobile View of Payslip */}
           <View style={styles.payslipCard}>
             <View style={styles.payslipHeader}>
@@ -486,32 +476,20 @@ export default function PayslipsScreen() {
                 <Text style={styles.tableHeaderCell}>YTD</Text>
               </View>
 
-              <View style={styles.tableRow}>
-                <Text style={[styles.tableCell, { flex: 2 }]}>Basic Salary</Text>
-                <Text style={styles.tableCell}>{empDetails?.earnComponent["Basic Salary"] || '0.00'}</Text>
-                <Text style={styles.tableCell}>{empDetails?.ytdEarn["Basic Salary"] || '0.00'}</Text>
-              </View>
+              {empDetails.earnComponent &&
+                Object.entries(empDetails.earnComponent).map(([key, value]) => (
+                  <View style={styles.tableRow} key={key}>
+                    <Text style={[styles.tableCell, { flex: 2 }]}>{String(key)}</Text>
+                    <Text style={styles.tableCell}>{String(value)}</Text>
+                    <Text style={styles.tableCell}>{empDetails?.ytdEarn?.[key] || empDetails?.ytdDeduct?.[key]}</Text>
+                  </View>
+                ))}
 
-              <View style={styles.tableRow}>
-                <Text style={[styles.tableCell, { flex: 2 }]}>House Rent Allowance</Text>
-                <Text style={styles.tableCell}>{empDetails.earnComponent["House Rent Allowance"] || '0.00'}</Text>
-                <Text style={styles.tableCell}>{empDetails.ytdEarn["House Rent Allowance"] || '0.00'}</Text>
-              </View>
-
-              <View style={styles.tableRow}>
-                <Text style={[styles.tableCell, { flex: 2 }]}>Fixed</Text>
-                <Text style={styles.tableCell}>{empDetails.earnComponent["Fixed"] || '0.00'}</Text>
-                <Text style={styles.tableCell}>{empDetails.ytdEarn["Fixed"] || '0.00'}</Text>
-              </View>
 
               <View style={[styles.tableRow, styles.totalRow]}>
                 <Text style={[styles.tableCellTotal, { flex: 2 }]}>Total</Text>
-                <Text style={styles.tableCellTotal}>{(
-                  parseFloat((empDetails.basicSalMonth || "0").replace(/,/g, "")) +
-                  parseFloat((empDetails.hra || "0").replace(/,/g, "")) +
-                  parseFloat((empDetails.fixedAllow || "0").replace(/,/g, ""))
-                ).toFixed(2)}
-
+                <Text style={styles.tableCellTotal}>
+                  {empDetails.monthlyCTC}
                 </Text>
                 <Text style={styles.tableCellTotal}></Text>
               </View>
@@ -523,6 +501,15 @@ export default function PayslipsScreen() {
                 <Text style={styles.tableHeaderCell}>Current Month</Text>
                 <Text style={styles.tableHeaderCell}>YTD</Text>
               </View>
+              {empDetails.deductComponent &&
+                Object.entries(empDetails.deductComponent).map(([key, value]) => (
+                  <View style={styles.tableRow} key={key}>
+                    <Text style={[styles.tableCell, { flex: 2 }]}>{String(key)}</Text>
+                    <Text style={styles.tableCell}>{String(value)}</Text>
+                    <Text style={styles.tableCell}>{empDetails?.ytdDeduct?.[key]}</Text>
+                  </View>
+                ))}
+
 
               <View style={[styles.tableRow, styles.totalRow]}>
                 <Text style={[styles.tableCellTotal, { flex: 2 }]}>Total Deductions</Text>
@@ -532,23 +519,17 @@ export default function PayslipsScreen() {
             </View>
 
             <View style={styles.netPaySection}>
-              <Text style={styles.netPayText}>Net Pay : {empDetails.netpay || '0.00'}</Text>
-              <Text style={styles.netPayWords}>{empDetails.netpayInWords || '--'}</Text>
+              <Text style={styles.netPayText}>Net Pay : {empDetails.netpay || "0.00"}</Text>
+              <Text style={styles.netPayWords}>{empDetails.netpayInWords || "--"}</Text>
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                THIS IS A COMPUTER GENERATED STATEMENT - SIGNATURE NOT REQUIRED
-              </Text>
+              <Text style={styles.footerText}>THIS IS A COMPUTER GENERATED STATEMENT - SIGNATURE NOT REQUIRED</Text>
             </View>
           </View>
 
           <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity
-              style={styles.downloadButton}
-              onPress={downloadPdf}
-              disabled={loading}
-            >
+            <TouchableOpacity style={styles.downloadButton} onPress={downloadPdf} disabled={loading}>
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
@@ -559,225 +540,220 @@ export default function PayslipsScreen() {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.shareButton}
-              onPress={sharePdf}
-              disabled={loading}
-            >
+            <TouchableOpacity style={styles.shareButton} onPress={sharePdf} disabled={loading}>
               <Feather name="share-2" size={18} color="#fff" />
               <Text style={styles.actionButtonText}>Share</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
-      )
-      }
+      )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     paddingTop: 25,
   },
   payslipDetailContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
   },
   backButtonText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#4f46e5',
+    fontWeight: "500",
+    color: "#4f46e5",
     marginLeft: 8,
   },
   payslipCard: {
     margin: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
   },
   payslipHeader: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    alignItems: 'flex-end',
+    borderBottomColor: "#e0e0e0",
+    alignItems: "flex-end",
   },
   companyName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   companyLocation: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   payslipTitle: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    borderBottomColor: "#e0e0e0",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
   },
   payslipTitleText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   employeeInfoSection: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
     padding: 12,
   },
   employeeInfoColumn: {
     flex: 1,
   },
   infoRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 8,
   },
   infoLabel: {
     width: 85,
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
   infoValue: {
     flex: 1,
     fontSize: 12,
-    color: '#333',
-    fontWeight: '500',
+    color: "#333",
+    fontWeight: "500",
   },
   attendanceSection: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 8,
   },
   attendanceDetails: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   attendanceItem: {
     marginRight: 16,
     fontSize: 12,
-    color: '#333',
+    color: "#333",
   },
   earningsSection: {
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#f2f2f2',
+    flexDirection: "row",
+    backgroundColor: "#f2f2f2",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   tableHeaderCell: {
     flex: 1,
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   tableRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   tableCell: {
     flex: 1,
     fontSize: 12,
-    color: '#333',
+    color: "#333",
   },
   totalRow: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
   },
   tableCellTotal: {
     flex: 1,
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   deductionsSection: {
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   netPaySection: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   netPayText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: 'green',
+    fontWeight: "bold",
+    color: "green",
   },
   netPayWords: {
     fontSize: 12,
-    fontStyle: 'italic',
-    color: '#666',
+    fontStyle: "italic",
+    color: "#666",
     marginTop: 4,
   },
   footer: {
     padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   footerText: {
     fontSize: 10,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     margin: 16,
     marginTop: 8,
   },
   downloadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4f46e5',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4f46e5",
     borderRadius: 8,
     padding: 14,
     flex: 1,
     marginRight: 8,
-    shadowColor: '#4f46e5',
+    shadowColor: "#4f46e5",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 3,
   },
   shareButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#7c3aed',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#7c3aed",
     borderRadius: 8,
     padding: 14,
     flex: 1,
     marginLeft: 8,
-    shadowColor: '#7c3aed',
+    shadowColor: "#7c3aed",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -785,8 +761,8 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
     marginLeft: 8,
   },
-});
+})
