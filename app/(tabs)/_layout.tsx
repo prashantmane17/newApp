@@ -27,7 +27,7 @@
 // }
 
 import { Stack } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -41,31 +41,36 @@ export default function StackLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const pathname = usePathname();
-  const { handleLogout } = useSession();
-  const navigationItems: { name: string; route: RouteType; icon: React.ReactNode }[] = [
+  const { sessionData, handleLogout } = useSession();
+  const navigationItems: { name: string; route: RouteType; icon: React.ReactNode; role: string }[] = [
     {
       name: 'Message',
       route: '/(tabs)/msgDashboard',
-      icon: <MessageSquare size={24} />
+      icon: <MessageSquare size={24} />,
+      role: "all",
     },
     {
       name: 'Payroll',
       route: '/(tabs)/payslip',
-      icon: <DollarSign size={24} />
+      icon: <DollarSign size={24} />,
+      role: sessionData?.role,
     },
     {
       name: 'Attendance',
       route: '/(tabs)/attendance',
-      icon: <User size={24} />
+      icon: <User size={24} />,
+      role: sessionData?.role,
     },
     {
       name: 'Settings',
       route: '/(tabs)/profile',
-      icon: <Settings size={24} />
+      icon: <Settings size={24} />,
+      role: "all",
     },
-
   ];
-
+  useEffect(() => {
+    console.log("sessionData------", sessionData)
+  }, [sessionData])
   return (
     <SessionProvider>
       <View style={styles.container}>
@@ -91,20 +96,21 @@ export default function StackLayout() {
         {pathname !== '/' && (
           <View style={styles.bottomNav}>
             {navigationItems.map((item) => (
-              <TouchableOpacity
-                key={item.name}
-                style={[
-                  styles.navItem,
-                  pathname === item.route ? styles.activeItem : null
-                ]}
-                onPress={() => router.push(item.route as any)}
-              >
-                {React.cloneElement(item.icon as React.ReactElement, {
-                  color: "white"
-                })}
-                <Text style={styles.navText}>{item.name}</Text>
-              </TouchableOpacity>
-            ))}
+              item.role !== "Superadmin" && (
+                <TouchableOpacity
+                  key={item.name}
+                  style={[
+                    styles.navItem,
+                    pathname === item.route ? styles.activeItem : null
+                  ]}
+                  onPress={() => router.push(item.route as any)}
+                >
+                  {React.cloneElement(item.icon as React.ReactElement, {
+                    color: "white"
+                  })}
+                  <Text style={styles.navText}>{item.name}</Text>
+                </TouchableOpacity>
+              )))}
             <TouchableOpacity
               style={styles.navItem}
               onPress={() => handleLogout()}

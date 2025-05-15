@@ -24,7 +24,7 @@ export default function GroupDetails() {
     const friendsList = async () => {
         try {
             setIsLoading(true)
-            const response = await fetch(`http://192.168.1.25:8080/mobile-port_post_list/${data}`, {
+            const response = await fetch(`https://www.portstay.com/mobile-port_post_list/${data}`, {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },

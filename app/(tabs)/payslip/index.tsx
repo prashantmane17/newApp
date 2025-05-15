@@ -8,7 +8,7 @@ export default function HomeScreen() {
     const [empSalary, setEmpSalary] = useState<any>({});
     const [payslips, setPayslips] = useState<any>([]);
     const loadSalary = async () => {
-        const response = await fetch("http://192.168.1.25:8080/employee-salary-Details-mobile", {
+        const response = await fetch("https://www.portstay.com/employee-salary-Details-mobile", {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -17,15 +17,14 @@ export default function HomeScreen() {
             const data = await response.json()
             setEmpSalary(data)
         }
-        const payslipResponse = await fetch("http://192.168.1.25:8080/employee-Payslip-Details-mobile", {
+        const payslipResponse = await fetch("https://www.portstay.com/employee-Payslip-Details-mobile", {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
         });
         if (payslipResponse.ok) {
             const paySlipData = await payslipResponse.json()
-            console.log("jijiji----", paySlipData)
-            setPayslips(paySlipData.payrunData)
+            setPayslips(paySlipData)
         }
     }
     useEffect(() => {
@@ -71,15 +70,14 @@ export default function HomeScreen() {
 
 
             <View style={styles.activityList}>
-                {payslips
-                    .filter((item: any) => item.approveStatus !== "Pending")
+                {payslips?.payrunData?.filter((item: any) => item.approveStatus !== "Pending")
                     .map((item: any, index: number) => (
                         <TouchableOpacity
                             style={styles.activityItem}
                             key={index}
                             onPress={() =>
                                 router.push({
-                                    pathname: "/(tabs)/payslip/payslipTemplate2",
+                                    pathname: `/(tabs)/payslip/${payslips?.defaultTemplate === 'payslipTemplate2' ? 'payslipTemplate2' : payslips?.defaultTemplate === 'payslipTemplate3' ? 'payslipTemplate3' : "payslipModal"}`,
                                     params: { email: item.email, salMonth: item.payMonth },
                                 })
                             }
@@ -96,7 +94,7 @@ export default function HomeScreen() {
                     ))}
 
             </View>
-            {payslips.length === 0 && (
+            {payslips?.payrunData?.length === 0 && (
                 <View style={styles.notfundMsg}>
                     <Text style={styles.notfound}>Payslips not found</Text>
                 </View>

@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { Calendar, Building2, User, Mail, Phone, Chrome as Home, MapPin, Building, CreditCard, Percent, Lock } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
 
 export default function ProfileScreen() {
     const router = useRouter();
@@ -27,16 +29,30 @@ export default function ProfileScreen() {
             zipCode: '',
         },
     });
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
     const SectionTitle = ({ title }: { title: string }) => (
         <Text style={styles.sectionTitle}>{title}</Text>
     );
-
+    const formatDate = (dateStr: string): string => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        });
+    };
+    const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (event.type === 'set' && selectedDate) {
+            setProfileData({ ...profileData, doj: formatDate(selectedDate.toISOString()) });
+        }
+    };
     const loadSalary = async () => {
         setLoading(true);
-        const response = await fetch("http://192.168.1.25:8080/setting-mobile", {
+        const response = await fetch("https://www.portstay.com/setting-mobile", {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -102,7 +118,7 @@ export default function ProfileScreen() {
         formData.append("email", profileData.email);
 
         try {
-            const response = await fetch("http://192.168.1.25:8080/update-profile", {
+            const response = await fetch("https://www.portstay.com/update-profile", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -151,7 +167,7 @@ export default function ProfileScreen() {
                         <View style={styles.profileSection}>
                             <View style={styles.avatarContainer}>
                                 <Image
-                                    source={{ uri: 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png' }}
+                                    source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
                                     style={styles.avatar}
                                 />
                                 <TouchableOpacity style={styles.editAvatarButton}>
@@ -168,25 +184,30 @@ export default function ProfileScreen() {
                             {/* Date of Joining */}
                             <View style={styles.inputContainer}>
                                 <Text style={styles.label}>Date of Joining</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={profileData?.doj}
-                                    onChangeText={(text) => setProfileData({ ...profileData, doj: text })}
-                                    placeholder="Enter date of joining"
-                                    placeholderTextColor="#94A3B8"
-                                />
+                                {profileData?.doj ? (
+                                    <Text style={styles.input}>{profileData.doj}</Text>
+
+                                ) : (<>
+                                    <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                                        <Text style={styles.input}>Select Date of Joining</Text>
+                                    </TouchableOpacity>
+                                    {showDatePicker && (
+                                        <DateTimePicker
+                                            value={new Date()}
+                                            mode="date"
+                                            display="default"
+                                            onChange={handleDateChange}
+                                        />
+                                    )}
+                                </>
+                                )}
+
                             </View>
 
                             {/* Department */}
                             <View style={styles.inputContainer}>
                                 <Text style={styles.label}>Department</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={profileData?.aboutTeam}
-                                    onChangeText={(text) => setProfileData({ ...profileData, aboutTeam: text })}
-                                    placeholder="Enter department"
-                                    placeholderTextColor="#94A3B8"
-                                />
+                                <Text style={styles.input}>{profileData?.aboutTeam}</Text>
                             </View>
 
                             {/* Gender */}
@@ -243,13 +264,26 @@ export default function ProfileScreen() {
                             {/* Employee Type */}
                             <View style={styles.inputContainer}>
                                 <Text style={styles.label}>Employee Type</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={profileData?.empType}
-                                    onChangeText={(text) => setProfileData({ ...profileData, empType: text })}
-                                    placeholder="Enter employee type"
-                                    placeholderTextColor="#94A3B8"
-                                />
+                                {profileData?.empType !== '' && profileData?.empType !== 'null' ? (
+
+                                    <Text style={styles.input}>{profileData?.empType}</Text>
+                                ) : (
+                                    <View style={styles.pickerWrapper}>
+                                        <Picker
+                                            selectedValue={profileData.empType}
+                                            onValueChange={(value) =>
+                                                setProfileData({ ...profileData, empType: value })
+                                            }
+                                            style={styles.picker}
+                                            dropdownIconColor="#000"
+                                        >
+                                            <Picker.Item label="Select employee type" value={null} color="#94A3B8" />
+                                            <Picker.Item label="Full Time" value="Full Time" />
+                                            <Picker.Item label="Part Time" value="Part Time" />
+                                            <Picker.Item label="Contract" value="Contract" />
+                                        </Picker>
+                                    </View>
+                                )}
                             </View>
 
                             {/* Employee ID */}
@@ -269,7 +303,8 @@ export default function ProfileScreen() {
                             {/* Email */}
                             <View style={styles.inputContainer}>
                                 <Text style={styles.label}>Email</Text>
-                                <TextInput
+                                <Text style={styles.input}>{profileData?.email}</Text>
+                                {/* <TextInput
                                     style={styles.input}
                                     value={profileData?.email}
                                     onChangeText={(text) => setProfileData({ ...profileData, email: text })}
@@ -277,7 +312,7 @@ export default function ProfileScreen() {
                                     keyboardType="email-address"
                                     autoCapitalize="none"
                                     placeholderTextColor="#94A3B8"
-                                />
+                                /> */}
                             </View>
 
                             {/* Phone */}
@@ -595,6 +630,17 @@ const styles = StyleSheet.create({
         padding: 14,
         fontSize: 16,
         color: '#FFFFFF',
+    },
+    pickerWrapper: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginVertical: 10,
+    },
+    picker: {
+        height: Platform.OS === 'ios' ? 200 : 50,
+        width: '100%',
     },
     row: {
         flexDirection: 'row',

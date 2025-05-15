@@ -17,6 +17,7 @@
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-community/datetimepicker": "8.2.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "@stomp/stompjs": "^7.1.1",
@@ -55,7 +56,8 @@
     "react-native-svg": "^15.11.2",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "sockjs-client": "^1.6.1"
+    "sockjs-client": "^1.6.1",
+    "@react-native-picker/picker": "2.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

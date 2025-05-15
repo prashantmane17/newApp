@@ -24,7 +24,6 @@ const { width } = Dimensions.get("window")
 
 export default function PayslipsScreen() {
   const { email, salMonth } = useLocalSearchParams()
-  console.log("email----", email, "---month---", salMonth)
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(true)
 
@@ -32,15 +31,13 @@ export default function PayslipsScreen() {
   const router = useRouter();
   const loadPayDetails = async () => {
     setDataLoading(true)
-    const response = await fetch(`http://192.168.1.25:8080/fetching-payslip-mobile?email=${email}&month=${salMonth}`, {
+    const response = await fetch(`https://www.portstay.com/fetching-payslip-mobile?email=${email}&month=${salMonth}`, {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
-    // console.log("res-----", response)
     if (response.ok) {
       const data = await response.json()
-      console.log("jio---", data)
       setEmpDetails(data)
     }
     setDataLoading(false)
@@ -399,7 +396,7 @@ export default function PayslipsScreen() {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Feather name="arrow-left" size={20} color="#4f46e5" />
+        <Feather name="arrow-left" size={20} color="#f5f5f4" />
         <Text style={styles.backButtonText}>Back to Payslips</Text>
       </TouchableOpacity>
       {dataLoading ? (
@@ -554,22 +551,22 @@ export default function PayslipsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#06607a",
     paddingTop: 25,
   },
   payslipDetailContainer: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
   backButton: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
+    backgroundColor: "#008374",
   },
   backButtonText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#4f46e5",
+    color: "#f5f5f4",
     marginLeft: 8,
   },
   payslipCard: {
