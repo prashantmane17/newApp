@@ -65,7 +65,7 @@ export default function StackLayout() {
       name: 'Settings',
       route: '/(tabs)/profile',
       icon: <Settings size={24} />,
-      role: "all",
+      role: sessionData?.role,
     },
   ];
   useEffect(() => {
@@ -74,8 +74,8 @@ export default function StackLayout() {
   return (
     <SessionProvider>
       <View style={styles.container}>
-        {/* <View style={pathname === '/' ? styles.content : styles.screenContent}> */}
-        <View style={styles.content}>
+        <View style={pathname === '/' ? styles.content : styles.screenContent}>
+          {/* <View style={styles.content}> */}
           <Stack
             screenOptions={{
               headerStyle: {
@@ -111,6 +111,16 @@ export default function StackLayout() {
                   <Text style={styles.navText}>{item.name}</Text>
                 </TouchableOpacity>
               )))}
+            {sessionData?.role === 'Superadmin' && (
+
+              <TouchableOpacity
+                style={styles.navItem}
+                onPress={() => router.push('/(tabs)/profile/superAdminProfile')}
+              >
+                <Settings size={24} color="#ffffff" />
+                <Text style={styles.navText}>Logout</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.navItem}
               onPress={() => handleLogout()}

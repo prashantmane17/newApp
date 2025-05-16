@@ -18,6 +18,14 @@ export default function MessagesLayout() {
                     headerBackTitle: 'Back'
                 }}
             />
+            <Stack.Screen
+                name="superAdminProfile"
+                options={{
+                    title: 'superAdminProfile',
+                    headerShown: false,
+                    headerBackTitle: 'Back'
+                }}
+            />
         </Stack>
     );
 }
