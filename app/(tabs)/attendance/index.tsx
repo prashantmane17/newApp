@@ -106,7 +106,7 @@ export default function AttendanceScreen() {
 
   // Update attendance data when month/year changes
   const loadSalary = async () => {
-    const response = await fetch("https://www.portstay.com/fetch-my-attendance-history-mobile", {
+    const response = await fetch("http://192.168.1.25:8080/fetch-my-attendance-history-mobile", {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

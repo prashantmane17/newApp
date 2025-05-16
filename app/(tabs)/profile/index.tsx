@@ -52,7 +52,7 @@ export default function ProfileScreen() {
     };
     const loadSalary = async () => {
         setLoading(true);
-        const response = await fetch("https://www.portstay.com/setting-mobile", {
+        const response = await fetch("http://192.168.1.25:8080/setting-mobile", {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -118,7 +118,7 @@ export default function ProfileScreen() {
         formData.append("email", profileData.email);
 
         try {
-            const response = await fetch("https://www.portstay.com/update-profile", {
+            const response = await fetch("http://192.168.1.25:8080/update-profile", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -167,7 +167,7 @@ export default function ProfileScreen() {
                         <View style={styles.profileSection}>
                             <View style={styles.avatarContainer}>
                                 <Image
-                                    source={{ uri: 'https://www.portstay.com/resources/img/Profile/default_user_image.png' }}
+                                    source={{ uri: 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png' }}
                                     style={styles.avatar}
                                 />
                                 <TouchableOpacity style={styles.editAvatarButton}>
