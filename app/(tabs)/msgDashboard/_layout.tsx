@@ -1,12 +1,19 @@
 import { Stack } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { View } from 'react-native';
+import { useSession } from '@/context/ContextSession';
 
 export default function StackLayout() {
   const colorScheme = useColorScheme();
+  const { sessionData, getSessionDetails } = useSession();
+  useEffect(() => {
+    if (sessionData === null) {
+      getSessionDetails();
+    }
 
+  }, [sessionData])
   return (
     <View style={{ flex: 1, marginTop: 30 }}>
       <Stack

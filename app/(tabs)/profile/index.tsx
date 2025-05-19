@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { useSession } from '@/context/ContextSession';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
     const router = useRouter();
@@ -68,7 +69,61 @@ export default function ProfileScreen() {
 
     useEffect(() => {
         loadSalary();
-    }, [])
+    }, []);
+
+    const uploadProfileImage = async () => {
+        // Step 1: Pick image from device
+        console.log('ki')
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (permissionResult.granted === false) {
+            alert('Permission to access media library is required!');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.5,
+        });
+
+        if (!result.canceled) {
+            const localUri = result.assets[0].uri;
+            const filename = localUri.split('/').pop();
+            const match = /\.(\w+)$/.exec(filename ?? '');
+            const type = match ? `image/${match[1]}` : `image`;
+
+            // Step 2: Prepare FormData
+            const formData = new FormData();
+            formData.append('file', {
+                uri: localUri,
+                name: filename,
+                type: type,
+            } as any);
+
+            // Step 3: Send image to backend
+            try {
+                const response = await fetch('http://192.168.1.25:8080/user-update-profile-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                    body: formData,
+                    credentials: 'include', // to send session cookie
+                });
+
+                if (response.ok) {
+                    const imagePath = await response.text(); // get image path from backend
+                    setProfileData({ ...profileData, profile_pic: imagePath })
+                } else {
+                    console.log('Upload failed with status:', response.status);
+                }
+            } catch (err) {
+                console.error('Error uploading image:', err);
+            }
+        }
+    };
 
     const SuccessAlert = () => {
         if (!showSuccessAlert) return null;
@@ -172,10 +227,10 @@ export default function ProfileScreen() {
                         <View style={styles.profileSection}>
                             <View style={styles.avatarContainer}>
                                 <Image
-                                    source={{ uri: 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png' }}
+                                    source={{ uri: `http://192.168.1.25:8080/imageController/${profileData?.profile_pic}.do` || 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png' }}
                                     style={styles.avatar}
                                 />
-                                <TouchableOpacity style={styles.editAvatarButton}>
+                                <TouchableOpacity style={styles.editAvatarButton} onPress={uploadProfileImage}>
                                     <Text style={styles.editAvatarText}>Change Photo</Text>
                                 </TouchableOpacity>
                             </View>
