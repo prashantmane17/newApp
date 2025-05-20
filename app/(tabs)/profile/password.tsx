@@ -29,7 +29,7 @@ export default function ChangePasswordScreen() {
         }).toString();
 
         try {
-            const response = await fetch('http://192.168.1.25:8080/password-setting', {
+            const response = await fetch('https://www.portstay.com/password-setting', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

@@ -31,12 +31,12 @@ export default function ChatScreen() {
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const friendsList = async () => {
         try {
-            const response = await fetch("http://192.168.1.25:8080/employee.chatUsers-mobile", {
+            const response = await fetch("https://www.portstay.com/employee.chatUsers-mobile", {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
             })
-            const chatResponse = await fetch(`http://192.168.1.25:8080/api/private-chat/mobile-establishchannel/${sessionData?.loginId}/${id}`, {
+            const chatResponse = await fetch(`https://www.portstay.com/api/private-chat/mobile-establishchannel/${sessionData?.loginId}/${id}`, {
                 method: "GET",
                 credentials: "include",
                 headers: {

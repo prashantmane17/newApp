@@ -34,7 +34,7 @@ export default function PayslipScreen() {
         try {
             // Dynamic data fetching from API
             const response = await fetch(
-                `http://192.168.1.25:8080/fetching-payslip-mobile?email=${email}&month=${salMonth}`,
+                `https://www.portstay.com/fetching-payslip-mobile?email=${email}&month=${salMonth}`,
                 {
                     method: "GET",
                     credentials: "include",

@@ -31,10 +31,10 @@ export default function ChatScreen() {
         try {
             let url = ""
             if (sessionData?.role === "Superadmin") {
-                url = `http://192.168.1.25:8080/owner.post.fetch-public-post-mobile?&page=0`
+                url = `https://www.portstay.com/owner.post.fetch-public-post-mobile?&page=0`
             }
             else {
-                url = `http://192.168.1.25:8080/mobile-post.employee.fetch-public-post?companyId=${companyId}&empId=${empId}&page=0`
+                url = `https://www.portstay.com/mobile-post.employee.fetch-public-post?companyId=${companyId}&empId=${empId}&page=0`
             }
             const response = await fetch(url, {
                 method: "GET",
@@ -139,7 +139,7 @@ export default function ChatScreen() {
 
                 <View style={styles.userInfo}>
 
-                    <Image source={{ uri: userData?.avatar ? userData?.avatar : 'http://192.168.1.25:8080/resources/img/Profile/default_company_image.png' }} style={styles.avatar} />
+                    <Image source={{ uri: userData?.avatar ? userData?.avatar : 'https://www.portstay.com/resources/img/Profile/default_company_image.png' }} style={styles.avatar} />
 
                     <Text style={styles.userName}>{name || "User"}</Text>
                 </View>
