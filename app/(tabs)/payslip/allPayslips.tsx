@@ -6,7 +6,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 export default function allPayslips() {
     const [payslips, setPayslips] = useState<any>([]);
     const loadSalary = async () => {
-        const payslipResponse = await fetch("https://www.portstay.com/employee-Payslip-Details-mobile", {
+        const payslipResponse = await fetch("http://192.168.1.25:8080/employee-Payslip-Details-mobile", {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },

@@ -35,7 +35,7 @@ export const SessionProvider = ({ children }: ChatProviderProps) => {
 
     const getChatDetails = async () => {
         try {
-            const response = await fetch('https://www.portstay.com/employee.chatUsers-mobile', {
+            const response = await fetch('http://192.168.1.25:8080/employee.chatUsers-mobile', {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },

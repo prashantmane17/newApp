@@ -73,7 +73,7 @@ export default function CreateGroupModal({
         try {
 
             const base64Image = await convertImageToBase64(groupImage as string);
-            const response = await fetch('https://www.portstay.com/create_port-mobile', {
+            const response = await fetch('http://192.168.1.25:8080/create_port-mobile', {
                 method: 'POST',
                 body: JSON.stringify({
                     name: groupName,

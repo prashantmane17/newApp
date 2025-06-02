@@ -26,7 +26,7 @@ let stompClient: Client | null = null;
 
 
 export const connectSocket = (channelId: string, userId: string, onMessageReceived: MessageCallback, onNotificationReceived: NotificationCallback): void => {
-    const socket = new SockJS('https://www.portstay.com/ws');
+    const socket = new SockJS('http://192.168.1.25:8080/ws');
 
     stompClient = new Client({
         webSocketFactory: () => socket as WebSocket,
