@@ -12,7 +12,7 @@ export default function allPayslips() {
             headers: { "Content-Type": "application/json" },
         });
         if (payslipResponse.ok) {
-            const paySlipData = await payslipResponse.json()
+            const paySlipData = await payslipResponse.json();
             setPayslips(paySlipData.payrunData)
         }
     }

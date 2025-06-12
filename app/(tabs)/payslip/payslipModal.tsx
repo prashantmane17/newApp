@@ -20,11 +20,11 @@ import * as Print from "expo-print"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { StorageAccessFramework } from "expo-file-system"
 
-const { width } = Dimensions.get("window")
+const { width } = Dimensions.get("window");
 
 export default function PayslipsScreen() {
   const { email, salMonth } = useLocalSearchParams()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true)
 
   const [empDetails, setEmpDetails] = useState<any>({})

@@ -1,8 +1,9 @@
 import { Stack } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { Keyboard } from 'react-native';
 import { SessionProvider, useSession } from '@/context/ContextSession';
 import { useRouter, usePathname } from 'expo-router';
 import { MessageSquare, DollarSign, Settings, User, LogOut, TicketPlus } from 'lucide-react-native';
@@ -14,10 +15,24 @@ export function MainStackLayout() {
     const router = useRouter();
     const pathname = usePathname();
     const { sessionData, getSessionDetails, handleLogout } = useSession();
+    const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+            setKeyboardVisible(true);
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            setKeyboardVisible(false);
+        });
+
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
 
     useEffect(() => {
         if (sessionData === null) {
-            console.log("sessionData------", sessionData)
             getSessionDetails();
         }
     }, [sessionData]);
@@ -51,7 +66,7 @@ export function MainStackLayout() {
 
     return (
         <View style={styles.container}>
-            <View style={pathname === '/' ? styles.content : styles.screenContent}>
+            <View style={(pathname === '/' || isKeyboardVisible) ? styles.content : styles.screenContent}>
                 <Stack
                     screenOptions={{
                         headerStyle: {
@@ -69,7 +84,7 @@ export function MainStackLayout() {
                 </Stack>
             </View>
 
-            {pathname !== '/' && (
+            {pathname !== '/' && !isKeyboardVisible && (
                 <View style={styles.bottomNav}>
                     {navigationItems.map((item) => (
                         item.role !== "Superadmin" && (

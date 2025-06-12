@@ -152,6 +152,7 @@ export default function ChatScreen() {
                 fromUserId: sessionData?.loginId,
                 contents: message as string,
                 toUserId: id as string,
+                fromUserName: sessionData?.name,
                 type: 'private'
             };
             sendSocketMessage(channelId, newMessage, sessionData?.loginId);
