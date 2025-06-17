@@ -141,7 +141,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#06607a',
     },
     header: {
         flexDirection: 'row',
@@ -149,8 +149,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingRight: 16,
         paddingBottom: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
         backgroundColor: '#008374',
 
     },
@@ -186,7 +184,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         padding: 12,
         borderRadius: 12,
-        marginBottom: 8,
+        margin: 8,
         backgroundColor: '#fff',
     },
     groupImage: {

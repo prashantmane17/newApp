@@ -118,7 +118,7 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#06607a',
     },
     header: {
         height: 60,
@@ -161,12 +161,12 @@ const styles = StyleSheet.create({
     name: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#111',
+        color: '#fff',
         textTransform: 'capitalize',
     },
     lastMessage: {
         fontSize: 14,
-        color: '#666',
+        color: '#f5f5f5',
         marginTop: 2,
     },
     msgStatusContainer: {

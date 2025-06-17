@@ -69,8 +69,8 @@ export default function LeaveCard() {
                                     </View>
                                     <View style={styles.row}>
                                         <Text style={styles.label}>Status:</Text>
-                                        <Text style={[styles.value, leave.status === 'pending' && styles.pending]}>
-                                            {leave.status}
+                                        <Text style={[styles.value, leave.status === 'pending' && styles.pending, leave.status === 'approved' && styles.approved]}>
+                                            {leave.status ? leave.status : "Pending"}
                                         </Text>
                                     </View>
                                 </View>
@@ -115,10 +115,10 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 4,
     },
-    combinedrow: {
-        flexDirection: 'row',
-        justifyContent: "space-between",
-    },
+    // combinedrow: {
+    //     flexDirection: 'row',
+    //     justifyContent: "space-between",
+    // },
     row: {
         flexDirection: 'row',
         marginBottom: 6,
@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         width: 100,
         color: '#333',
+
     },
     value: {
         flex: 1,
@@ -141,6 +142,12 @@ const styles = StyleSheet.create({
     pending: {
         color: '#FF8C00',
         fontWeight: 'bold',
+        textTransform: 'capitalize',
+    },
+    approved: {
+        color: '#008000',
+        fontWeight: 'bold',
+        textTransform: 'capitalize',
     },
     noData: {
         color: '#fff',

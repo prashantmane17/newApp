@@ -6,7 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { Keyboard } from 'react-native';
 import { SessionProvider, useSession } from '@/context/ContextSession';
 import { useRouter, usePathname } from 'expo-router';
-import { MessageSquare, DollarSign, Settings, User, LogOut, TicketPlus } from 'lucide-react-native';
+import { MessageSquare, DollarSign, Settings, User, LogOut, TicketPlus, Landmark } from 'lucide-react-native';
 
 type RouteType = '/(tabs)/msgDashboard' | '/(tabs)/payroll' | '/(tabs)/settings' | '/(tabs)/profile' | '/(tabs)/logout';
 
@@ -47,7 +47,7 @@ export function MainStackLayout() {
         {
             name: 'Payroll',
             route: '/(tabs)/payslip',
-            icon: <DollarSign size={24} />,
+            icon: <Landmark size={24} />,
             role: sessionData?.role,
         },
         {
@@ -92,10 +92,11 @@ export function MainStackLayout() {
                                 key={item.name}
                                 style={[
                                     styles.navItem,
-                                    pathname === item.route ? styles.activeItem : null
+                                    item.route.includes(pathname) ? styles.activeItem : null
                                 ]}
                                 onPress={() => router.push(item.route as any)}
                             >
+
                                 {React.cloneElement(item.icon as React.ReactElement, {
                                     color: "white"
                                 })}
@@ -147,6 +148,9 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         height: 60,
+        borderTopWidth: 1,
+        borderTopColor: '#6eb7cd',
+
         backgroundColor: '#06607a',
         ...Platform.select({
             ios: {
@@ -167,10 +171,16 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
     activeItem: {
-        borderRadius: 20,
-        paddingTop: 10,
         paddingBottom: 5,
+        borderBottomWidth: 2,
+        borderBottomColor: '#6eb7cd',
+        borderRadius: 20,
+        transitionDuration: '0.3s',
+        transitionProperty: 'border-bottom-width',
+        transitionTimingFunction: 'ease',
+        position: 'relative',
     },
+
     navText: {
         fontSize: 12,
         marginTop: 4,

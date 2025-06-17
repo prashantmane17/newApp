@@ -88,7 +88,7 @@ export default function CreateGroupModal({
             const result = await response.json();
 
             if (response.ok) {
-                Alert.alert('Success', result.message);
+                Alert.alert('Success', "Group created successfully");
             } else {
                 Alert.alert('Error', result.message);
             }

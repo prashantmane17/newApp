@@ -30,28 +30,39 @@ export default function allPayslips() {
             <View style={styles.activityList}>
                 {payslips
                     .filter((item: any) => item.approveStatus !== "Pending")
-                    .map((item: any, index: number) => (
-                        <TouchableOpacity
-                            style={styles.activityItem}
-                            key={index}
-                            onPress={() =>
-                                router.push({
-                                    pathname: "/(tabs)/payslip/payslipTemplate2",
-                                    params: { email: item.email, salMonth: item.payMonth },
-                                })
-                            }
-                        >
-                            <View style={styles.activityIconContainer}>
-                                <Feather name="file-text" size={20} color="#4f46e5" />
-                            </View>
-                            <View style={styles.activityContent}>
-                                <Text style={styles.activityTitle}>{item.payMonth} Payslip</Text>
-                                <Text style={styles.activityDate}>₹{item.monthCtc}</Text>
-                            </View>
-                            <Feather name="chevron-right" size={20} color="#9ca3af" />
-                        </TouchableOpacity>
-                    ))}
+                    .length > 0 ? (
+                    payslips
+                        .filter((item: any) => item.approveStatus !== "Pending")
+                        .map((item: any, index: number) => (
+                            <TouchableOpacity
+                                style={styles.activityItem}
+                                key={index}
+                                onPress={() =>
+                                    router.push({
+                                        pathname: "/(tabs)/payslip/payslipTemplate2",
+                                        params: { email: item.email, salMonth: item.payMonth },
+                                    })
+                                }
+                            >
+                                <View style={styles.activityIconContainer}>
+                                    <Feather name="file-text" size={20} color="#4f46e5" />
+                                </View>
+                                <View style={styles.activityContent}>
+                                    <Text style={styles.activityTitle}>{item.payMonth} Payslip</Text>
+                                    <Text style={styles.activityDate}>₹{item.monthCtc}</Text>
+                                </View>
+                                <Feather name="chevron-right" size={20} color="#9ca3af" />
+                            </TouchableOpacity>
+                        ))
+                ) : (
+                    <View style={styles.emptyContainer}>
+                        <Feather name="file-text" size={40} color="#9ca3af" />
+                        <Text style={styles.emptyText}>No approved payslips found</Text>
+                        {/* <Text style={styles.emptySubText}>Your approved payslips will appear here</Text> */}
+                    </View>
+                )}
             </View>
+
         </View>
     )
 }
@@ -111,5 +122,22 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: "#6b7280",
         marginTop: 2,
+    },
+    emptyContainer: {
+        padding: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    emptyText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+        marginTop: 12,
+    },
+    emptySubText: {
+        fontSize: 14,
+        color: '#6b7280',
+        marginTop: 4,
+        textAlign: 'center',
     },
 })

@@ -22,6 +22,7 @@ import moment from "moment"
 import { connectSocket, sendMessage as sendSocketMessage, ChatMessage } from '@/hooks/sockets/socketService'; // adjust the path as per your project structure
 import { subscribeToNotifications } from '@/hooks/sockets/socketService'; // adjust the path as per your project structure
 import { v4 as uuidv4 } from 'uuid';
+import { Feather } from '@expo/vector-icons';
 
 
 export default function ChatScreen() {
@@ -103,7 +104,6 @@ export default function ChatScreen() {
             setIsLoading(false);
         }
     }
-
     useEffect(() => {
         if (!id || !sessionData?.loginId) return;
         friendsList();
@@ -166,7 +166,6 @@ export default function ChatScreen() {
         const date = moment(dateString)
         const today = moment().startOf("day")
         const yesterday = moment().subtract(1, "day").startOf("day")
-
         if (date.isSame(today, "day")) return "Today"
         if (date.isSame(yesterday, "day")) return "Yesterday"
         return date.format("DD MMMM YYYY")
@@ -174,7 +173,7 @@ export default function ChatScreen() {
 
     const formatTime = (dateString: string) => moment(dateString).format("hh:mm A")
 
-    // Group messages by date for SectionList
+
     const messagesByDate = useMemo(() => {
         if (messages.length === 0) return []
 
@@ -256,7 +255,12 @@ export default function ChatScreen() {
                                 ]}
                             >
                                 <Text style={styles.messageText}>{item.contents}</Text>
-                                <Text style={styles.timeText}>{formatTime(item.dateAndTime)}</Text>
+                                <View style={styles.messageFooter}>
+                                    <Text style={styles.timeText}>{formatTime(item.dateAndTime)}</Text>
+                                    {/* {sessionData?.loginId === item.fromUserId && (
+                                        <Feather name="check" size={12} color="#9ca3af" style={styles.tickIcon} />
+                                    )} */}
+                                </View>
                             </View>
                         )}
                         renderSectionHeader={({ section: { title } }) => (
@@ -304,12 +308,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#E5DDD5",
-        // paddingBottom: 20,// WhatsApp chat background color
     },
     header: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#128C7E", // WhatsApp header green
+        backgroundColor: "#128C7E",
         paddingTop: Platform.OS === "ios" ? 50 : 10,
         paddingBottom: 10,
         paddingHorizontal: 10,
@@ -408,12 +411,18 @@ const styles = StyleSheet.create({
         color: "#303030",
         lineHeight: 22,
     },
+    messageFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        marginTop: 2,
+    },
+    tickIcon: {
+        marginLeft: 4,
+    },
     timeText: {
         fontSize: 11,
-        color: "#7D7D7D",
-        textAlign: "right",
-        marginTop: 2,
-        marginLeft: 10,
+        color: '#9ca3af',
     },
     inputContainer: {
         flexDirection: "row",
