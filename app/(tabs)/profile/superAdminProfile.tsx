@@ -17,7 +17,7 @@ export default function SuperAdminProfile() {
 
     const loadSalary = async () => {
         setLoading(true);
-        const response = await fetch(`http://192.168.1.25:8080/owner-setting-mobile${sessionData?.userId}`, {
+        const response = await fetch(`https://www.portstay.com/owner-setting-mobile${sessionData?.userId}`, {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -111,7 +111,7 @@ export default function SuperAdminProfile() {
                 base64Image = await convertImageToBase64(profileImage)
             }
 
-            const response = await fetch("http://192.168.1.25:8080/owner-updateSuperadmin-mobile", {
+            const response = await fetch("https://www.portstay.com/owner-updateSuperadmin-mobile", {
                 method: "POST",
                 body: JSON.stringify({
                     firstName: firstName,
@@ -152,7 +152,7 @@ export default function SuperAdminProfile() {
                 <View style={styles.avatarContainer}>
                     <Image
                         source={{
-                            uri: profileImage || `http://192.168.1.25:8080/imageController/${profilePic}.do` || "http://192.168.1.25:8080/resources/img/Profile/default_user_image.png",
+                            uri: profileImage || `https://www.portstay.com/imageController/${profilePic}.do` || "https://www.portstay.com/resources/img/Profile/default_user_image.png",
                         }}
                         style={styles.avatar}
                     />

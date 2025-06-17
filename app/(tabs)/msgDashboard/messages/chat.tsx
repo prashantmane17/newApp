@@ -65,15 +65,15 @@ export default function ChatScreen() {
     const friendsList = async () => {
         setIsLoading(true);
         try {
-            const unseenResponse = await fetch(`http://192.168.1.25:8080/api/private-chat/establishchannel${id}`, {
+            const unseenResponse = await fetch(`https://www.portstay.com/api/private-chat/establishchannel${id}`, {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
             })
             const chatResponse = await unseenResponse.json()
-            let url = `http://192.168.1.25:8080/api/private-chat/channel/${chatResponse.channelId}`
+            let url = `https://www.portstay.com/api/private-chat/channel/${chatResponse.channelId}`
             if (sessionData?.role === "Superadmin") {
-                url = `http://192.168.1.25:8080/api/private-chat/channel/${chatResponse.channelId}`
+                url = `https://www.portstay.com/api/private-chat/channel/${chatResponse.channelId}`
             }
             const response = await fetch(url, {
                 method: "GET",

@@ -30,7 +30,7 @@ export default function PayslipsScreen() {
     const router = useRouter()
     const loadPayDetails = async () => {
         setDataLoading(true)
-        const response = await fetch(`http://192.168.1.25:8080/fetching-payslip-mobile?email=${email}&month=${salMonth}`, {
+        const response = await fetch(`https://www.portstay.com/fetching-payslip-mobile?email=${email}&month=${salMonth}`, {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },

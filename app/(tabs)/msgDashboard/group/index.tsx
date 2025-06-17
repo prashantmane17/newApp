@@ -26,7 +26,7 @@ export default function HomeScreen() {
     const groupData = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch("http://192.168.1.25:8080/fetchAllPortOfCompany-mobile", {
+            const response = await fetch("https://www.portstay.com/fetchAllPortOfCompany-mobile", {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
@@ -51,9 +51,9 @@ export default function HomeScreen() {
         try {
             let url = ""
             if (status === "message") {
-                url = `http://192.168.1.25:8080/port.RequestAction?action=message&portId=${groupId}`
+                url = `https://www.portstay.com/port.RequestAction?action=message&portId=${groupId}`
             } else {
-                url = `http://192.168.1.25:8080/port.RequestAction?action=leave&portId=${groupId}`
+                url = `https://www.portstay.com/port.RequestAction?action=leave&portId=${groupId}`
             }
             const response = await fetch(url, {
                 method: "GET",
@@ -76,7 +76,7 @@ export default function HomeScreen() {
         >
             <Image
                 source={{
-                    uri: item.profile_pic ? `http://192.168.1.25:8080/imageController/${item.profile_pic}.do` : "http://192.168.1.25:8080/resources/img/Profile/default_group_image.png"
+                    uri: item.profile_pic ? `https://www.portstay.com/imageController/${item.profile_pic}.do` : "https://www.portstay.com/resources/img/Profile/default_group_image.png"
                 }}
                 style={styles.groupImage}
             />

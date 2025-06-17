@@ -8,7 +8,7 @@ export default function HomeScreen() {
     const [empSalary, setEmpSalary] = useState<any>({});
     const [payslips, setPayslips] = useState<any>([]);
     const loadSalary = async () => {
-        const response = await fetch("http://192.168.1.25:8080/employee-salary-Details-mobile", {
+        const response = await fetch("https://www.portstay.com/employee-salary-Details-mobile", {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -17,7 +17,7 @@ export default function HomeScreen() {
             const data = await response.json()
             setEmpSalary(data)
         }
-        const payslipResponse = await fetch("http://192.168.1.25:8080/employee-Payslip-Details-mobile", {
+        const payslipResponse = await fetch("https://www.portstay.com/employee-Payslip-Details-mobile", {
             method: "GET",
             credentials: "include",
             headers: { "Content-Type": "application/json" },

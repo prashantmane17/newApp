@@ -195,7 +195,7 @@ export default function LeaveModal({ visible, onClose }: LeaveModalProps) {
         formData.append('follow_Date', formatDateRange(startDate, endDate));
         formData.append('description', comment);
         try {
-            const response = await fetch('http://192.168.1.25:8080/add-holidays-list', {
+            const response = await fetch('https://www.portstay.com/add-holidays-list', {
                 method: 'POST',
                 credentials: "include",
                 headers: {

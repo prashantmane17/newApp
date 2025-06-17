@@ -13,7 +13,7 @@ export default function MessagesScreen() {
     const friendsList = async (id: string) => {
         setIsLoading(true);
         try {
-            const response = await fetch(`http://192.168.1.25:8080/employee.cover-profile-mobile${id}`, {
+            const response = await fetch(`https://www.portstay.com/employee.cover-profile-mobile${id}`, {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
@@ -31,7 +31,7 @@ export default function MessagesScreen() {
         try {
             let response;
             if (status === "Message") {
-                response = await fetch(`http://192.168.1.25:8080/add-friend?id=${id}`, {
+                response = await fetch(`https://www.portstay.com/add-friend?id=${id}`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: { "Content-Type": "application/json" }
@@ -39,7 +39,7 @@ export default function MessagesScreen() {
                 })
             }
             else {
-                response = await fetch(`http://192.168.1.25:8080/friendRequestAction.do?frndRequestAction=Unfollow&&userId=${id}`, {
+                response = await fetch(`https://www.portstay.com/friendRequestAction.do?frndRequestAction=Unfollow&&userId=${id}`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: { "Content-Type": "application/json" }
@@ -95,7 +95,7 @@ export default function MessagesScreen() {
                                     source={{
                                         uri: contact.profile_pic
                                             ? contact.profile_pic
-                                            : 'http://192.168.1.25:8080/resources/img/Profile/default_user_image.png',
+                                            : 'https://www.portstay.com/resources/img/Profile/default_user_image.png',
                                     }}
                                     style={styles.avatar}
                                 />

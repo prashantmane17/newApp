@@ -26,7 +26,7 @@ export const SessionProvider = ({ children }: SessionProviderProps) => {
 
     const getSessionDetails = async () => {
         try {
-            const response = await fetch("http://192.168.1.25:8080/session-details", {
+            const response = await fetch("https://www.portstay.com/session-details", {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
@@ -55,7 +55,7 @@ export const SessionProvider = ({ children }: SessionProviderProps) => {
     };
     const handleLogout = async () => {
         try {
-            const response = await fetch('http://192.168.1.25:8080/signout', {
+            const response = await fetch('https://www.portstay.com/signout', {
                 method: 'GET',
                 credentials: 'include', // Important: to include cookies
             });

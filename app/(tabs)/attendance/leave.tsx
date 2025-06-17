@@ -10,7 +10,7 @@ export default function LeaveCard() {
 
     const loadLeaveData = async () => {
         try {
-            const response = await fetch("http://192.168.1.25:8080/my-time-off-request-list-mobile", {
+            const response = await fetch("https://www.portstay.com/my-time-off-request-list-mobile", {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
